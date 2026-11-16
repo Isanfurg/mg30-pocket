@@ -8,6 +8,17 @@
 <body>
   <header class="top"><div class="brand"><span class="brand-icon">M</span><div><strong>MG30 <span>Pocket</span></strong><small>Tu pedalboard, en el bolsillo.</small></div></div><span id="connectionBadge" class="badge">SIN CONEXIÓN</span></header>
   <main>
+    <section id="stageView" hidden>
+      <div class="section-heading"><div><span class="eyebrow">TABLET · EN DIRECTO</span><h1 class="stage-title">Botonera</h1></div><button id="stageSync" class="primary">Leer NUX</button></div>
+      <p id="stageStatus" class="muted" role="status">Conecta USB MIDI y pulsa Leer NUX. Puedes usar pantalla dividida con tu app de letras.</p>
+      <div class="stage-top"><strong id="stagePreset">Sin preset leído</strong><label class="inline"><input id="stageAwake" type="checkbox"> Mantener pantalla encendida</label></div>
+      <div id="stageScenes" class="stage-scenes" role="group" aria-label="Cambiar escena en la NUX"></div>
+      <div id="stagePedals" class="stage-pedals"></div>
+      <div class="stage-toolbar"><button id="stagePrevious" class="secondary">← Preset</button><button id="stageNext" class="secondary">Preset →</button><button id="stageNames" class="text-button">Nombrar escenas</button></div>
+      <p class="notice">Toca el nombre de un pedal para ajustar sus parámetros; su botón inferior lo enciende o apaga. Los cambios en vivo quedan sin guardar hasta que pulses Guardar en NUX.</p>
+      <details class="panel"><summary>Control y conexión</summary><label class="inline"><input id="stageProfile" type="checkbox"> Mi NUX usa el mapeo MIDI predeterminado</label><p class="muted">Actívalo solo si no cambiaste los CC en QuickTone. Leer NUX identifica el firmware y comprueba el formato. Si cambias algo en la pedalera, pulsa Leer NUX para actualizar los valores.</p><button id="stageConnect" class="secondary">Configurar USB MIDI</button></details>
+      <section class="panel"><h2>Bancos y guardado en la pedalera</h2><p class="muted">La carga escribe los ajustes de los destinos indicados. Los archivos de IR/NAM no se transfieren: deben estar ya instalados en esos mismos slots. Se conserva un respaldo de ajustes antes de escribir.</p><div class="actions"><button id="stageSave" class="primary">Guardar en NUX</button><button id="stageUploadOne" class="secondary">Cargar preset del archivo</button><button id="stageUploadAll" class="secondary">Cargar banco del archivo</button><button id="stageBackup" class="secondary">Respaldar los 128</button><button id="stageImportBank" class="secondary">Abrir banco MIDI</button><button id="stageLastBackup" class="text-button">Exportar último respaldo previo</button></div><p id="stageTransfer" class="muted" role="status"></p></section>
+    </section>
     <section id="editorView">
       <div class="section-heading"><div><span class="eyebrow">BIBLIOTECA LOCAL</span><h1 id="editorTitle">Tu sonido.<br><span>Escena por escena.</span></h1></div><button id="import" class="primary">＋ Importar</button></div>
       <p class="muted" id="fileName">Importa un preset o un banco .mg30patch de QuickTone.</p>
@@ -20,23 +31,25 @@
         <div id="chain" class="chain"></div>
         <section id="blockEditor" class="panel"></section>
         <div class="actions"><button id="exportPreset" class="primary">Exportar preset</button><button id="exportBank" class="secondary">Exportar banco</button><button id="copyScene" class="secondary">Copiar escena</button><button id="reset" class="text-button">Restaurar preset original</button></div>
-        <p class="notice">Los controles de esta pantalla editan el archivo. Para cargarlo en la NUX, expórtalo e impórtalo con QuickTone. La app todavía no transmite bancos ni parámetros por SysEx.</p>
+        <p class="notice">Esta pantalla edita el archivo local. Para cargar sus ajustes por USB, usa «Cargar preset/banco del archivo» en Botonera. Para modificar el sonido al tocar, usa los pedales de Botonera.</p>
       </div>
     </section>
     <section id="midiView" hidden>
       <span class="eyebrow">USB · MIDI</span><h1>MIDI en vivo</h1>
       <p class="muted">Conecta la NUX por cable USB de datos y adaptador OTG. No requiere internet.</p>
       <section class="panel"><div class="section-heading compact"><h2>Conexión USB</h2><button id="refreshDevices" class="text-button">Actualizar</button></div><label>Dispositivo<select id="devices"></select></label><div class="two-col"><label>Enviar hacia NUX<select id="sendPort"></select></label><label>Recibir desde NUX<select id="receivePort"></select></label></div><div class="actions"><button id="connect" class="primary">Conectar MIDI</button><button id="disconnect" class="secondary">Desconectar</button></div><p id="midiStatus" class="muted">Sin conexión. El editor funciona sin pedalera.</p></section>
-      <section class="panel"><div class="section-heading compact"><h2>Pedalera en vivo</h2><label class="inline"><input id="follow" type="checkbox" checked> Seguir selección</label></div><div class="live-display"><strong id="livePreset">—</strong><span id="liveScene">Esperando mensajes MIDI</span></div><p class="notice">Identifica preset y escena cuando la NUX los comunica. El sonido y los parámetros visibles provienen del archivo importado; no son una lectura completa de la pedalera.</p><div class="actions"><button id="sendPreset" class="secondary">Activar preset seleccionado</button><button id="sendScene" class="secondary">Activar escena seleccionada</button></div></section>
-      <section class="panel"><h2>Pedales por MIDI</h2><p class="muted">Configura los mismos CC que tengas asignados en QuickTone. ON/OFF envía una orden; solo se muestra como recibido si llega respuesta MIDI.</p><div id="liveEffects"></div></section>
+      <section class="panel"><div class="section-heading compact"><h2>Seguimiento del archivo</h2><label class="inline"><input id="follow" type="checkbox" checked> Seguir selección</label></div><div class="live-display"><strong id="livePreset">—</strong><span id="liveScene">Esperando mensajes MIDI</span></div><p class="notice">Identifica preset y escena cuando la NUX los comunica. El sonido y los parámetros visibles provienen del archivo importado; no son una lectura completa de la pedalera.</p><div class="actions"><button id="sendPreset" class="secondary">Activar preset seleccionado</button><button id="sendScene" class="secondary">Activar escena seleccionada</button></div></section>
+      <section class="panel"><h2>CC personalizados</h2><p class="muted">Configura los mismos CC que tengas asignados en QuickTone. ON/OFF envía una orden; solo se muestra como recibido si llega respuesta MIDI.</p><div id="liveEffects"></div></section>
       <details class="panel"><summary>Configurar canal y controles</summary><div class="two-col"><label>Canal MIDI<input id="channel" type="number" min="1" max="16" value="1"></label><label>CC de escena<input id="sceneCC" type="number" min="0" max="119" placeholder="Sin asignar"></label></div><p class="notice">Nuestra MG-30 emitió CC <strong>80 decimal</strong> (0x50), con valores 0/1/2 para S1/S2/S3. Confirma el mapeo de recepción de tu pedalera antes de habilitar el envío.</p><div id="mappingRows"></div><button id="saveMapping" class="primary">Guardar mapeo</button><p class="muted">Deja un CC vacío para desactivar ese control. Los cambios de mapeo borran los estados recibidos anteriores.</p></details>
-      <details class="panel"><summary>Monitor MIDI</summary><p class="muted">RX recibido · TX enviado, sin confirmar ejecución. No se envía SysEx.</p><pre id="midiLog">Sin mensajes.</pre></details>
+      <details class="panel"><summary>Monitor MIDI</summary><p class="muted">RX recibido · TX enviado. Las transferencias NUX esperan confirmación y relectura.</p><pre id="midiLog">Sin mensajes.</pre></details>
     </section>
   </main>
-  <nav class="bottom" aria-label="Pantallas"><button id="editorTab" class="active">▦ <span>Presets</span></button><button id="midiTab">⌁ <span>MIDI en vivo</span></button></nav>
+  <nav class="bottom" aria-label="Pantallas"><button id="stageTab">◉ <span>Botonera</span></button><button id="editorTab" class="active">▦ <span>Archivos</span></button><button id="midiTab">⌁ <span>Conexión</span></button></nav>
   <div id="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="promptDialog"><form method="dialog"><h2 id="promptTitle"></h2><label id="promptLabel" for="promptInput"></label><input id="promptInput" maxlength="16" autocomplete="off"><div class="actions"><button value="cancel" class="secondary">Cancelar</button><button value="ok" class="primary">Guardar</button></div></form></dialog>
-  <input id="browserFile" type="file" accept=".mg30patch" hidden>
+  <dialog id="stageEditor"><div class="section-heading"><h2 id="stageEditorTitle">Ajustes en vivo</h2><button id="stageEditorClose" class="secondary">Cerrar</button></div><p id="stageEditorState" class="muted"></p><div id="stageParameters" class="parameters"></div></dialog>
+  <dialog id="transferDialog"><h2>Revisar carga en NUX</h2><p id="transferSummary"></p><p class="notice">Esto reemplaza los ajustes guardados de los destinos. El respaldo previo queda en la app. Mantén USB conectado y esta app visible hasta terminar.</p><pre id="transferSlots"></pre><label class="inline"><input id="transferAssets" type="checkbox"> Los IR/NAM necesarios ya están instalados en los mismos destinos. Esta carga no los copia.</label><div class="actions"><button id="transferCancel" class="secondary">Cancelar</button><button id="transferConfirm" class="primary">Confirmar carga</button></div></dialog>
+  <input id="browserFile" type="file" accept=".mg30patch,.json" hidden>
   <script type="module" src="app.mjs"></script>
 </body>
 </html>

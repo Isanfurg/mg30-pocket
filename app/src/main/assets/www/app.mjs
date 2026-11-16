@@ -3,12 +3,16 @@ import { PatchDocument } from './patch-editor.mjs';
 import { gearArt } from './gear-art.mjs';
 import { MidiStream, cc, pc, validateMapping, sceneController } from './midi.mjs';
 import { toBase64, fromBase64, restoreDraft } from './session.mjs';
+import { NuxLink } from './nux.mjs';
+import { createStage } from './stage.mjs';
 
 const $ = id => document.getElementById(id);
 const native = window.PocketNative;
 let doc, program, scene = 'S1', block = 'AMP', filename = '', dirty = false, saveTimer, toastTimer;
 let devices = [], connection = { connected: false }, liveProgram = null, liveScene = null, logs = [], received = {};
 let mapping = { channel: 1, sceneCC: null, effects: [] };
+let stage;
+const nux = new NuxLink(bytes => { if(!native || !connection.send || !connection.receive) throw new Error('Conecta envío y recepción USB MIDI.'); native.sendNux(JSON.stringify(bytes)); });
 try { const saved = localStorage.getItem('mapping'); if (saved) mapping = validateMapping(JSON.parse(saved)); } catch { /* Ignore incompatible old settings. */ }
 const effectBlocks = ['WAH','GATE','CMP','EFX','AMP','IR','EQ','MOD','DLY','RVB','VOL','SR'];
 const current = () => doc?.describe(program);
@@ -19,7 +23,7 @@ function toast(message, error = false) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, error ? 8000 : 4500);
 }
 function safe(fn) { return (...args) => { try { return fn(...args); } catch (error) { toast(error.message, true); } }; }
-function action(id, fn) { $(id).addEventListener('click', safe(fn)); }
+function action(id, fn) { $(id).addEventListener('click', safe((...args) => { if(stage?.busy) throw new Error('Espera a que termine la operación NUX.'); return fn(...args); })); }
 function draft() { return { version: 1, name: filename, original: toBase64(doc.original), edited: toBase64(doc.exportAll()), program, scene, dirty }; }
 function persist() {
   clearTimeout(saveTimer);
@@ -128,7 +132,7 @@ function promptValue(title, initial, max = 16) {
 action('import', () => { if (native) native.openFile(); else $('browserFile').click(); });
 $('browserFile').addEventListener('change', async () => {
   const file = $('browserFile').files[0];
-  try { if (!file) return; if (file.size > 9902 * 128) throw new Error('Archivo demasiado grande.'); loadDocument(new Uint8Array(await file.arrayBuffer()), file.name); }
+  try { if (!file) return; if (file.size > 9902 * 128) throw new Error('Archivo demasiado grande.'); if(file.name.endsWith('.json')){showStage();await stage.importBank(JSON.parse(await file.text()));}else loadDocument(new Uint8Array(await file.arrayBuffer()), file.name); }
   catch (error) { toast(error.message, true); } finally { $('browserFile').value = ''; }
 });
 action('demo', () => {
@@ -151,9 +155,11 @@ action('rename', async () => { const name = await promptValue('Nombre (ASCII, ha
 action('copyScene', async () => { const target = await promptValue(`Copiar ${scene} a S1, S2 o S3`, scene, 2); if (target !== null) safe(() => { if (target === scene) throw new Error('Elige otra escena.'); if (!['S1','S2','S3'].includes(target)) throw new Error('Escena no válida.'); if (!confirm(`¿Reemplazar ${target} con ${scene} en el archivo?`)) return; doc.copyScene(program, scene, target); changed(); toast(`Copiada ${scene} a ${target}.`); })(); });
 action('exportPreset', () => exportFile(false)); action('exportBank', () => exportFile(true));
 action('reset', () => { if (confirm('¿Restaurar este preset al archivo original importado?')) { doc.reset(program); changed(); render(); } });
-function showView(midi) { $('editorView').hidden = midi; $('midiView').hidden = !midi; $('editorTab').classList.toggle('active', !midi); $('midiTab').classList.toggle('active', midi); window.scrollTo(0, 0); }
+function showView(midi) { document.body.classList.remove('stage-mode');$('stageView').hidden=true;$('stageTab').classList.remove('active');$('editorView').hidden = midi; $('midiView').hidden = !midi; $('editorTab').classList.toggle('active', !midi); $('midiTab').classList.toggle('active', midi); window.scrollTo(0, 0); }
+function showStage(){ document.body.classList.add('stage-mode');$('editorView').hidden=true;$('midiView').hidden=true;$('stageView').hidden=false;for(const id of ['editorTab','midiTab'])$(id).classList.remove('active');$('stageTab').classList.add('active');stage?.show();window.scrollTo(0,0); }
 action('editorTab', () => showView(false)); action('midiTab', () => showView(true));
-window.pocketBack = () => { if ($('promptDialog').open) $('promptDialog').close('cancel'); else if (!$('midiView').hidden) showView(false); else { persist(); toast('Borrador conservado. Usa Inicio para salir.'); } };
+action('stageTab',showStage);
+window.pocketBack = () => { if(stage?.busy){toast('Operación NUX en curso. Mantén la app visible.');return;}if($('stageEditor').open){$('stageEditorClose').click();return;}if($('transferDialog').open){$('transferCancel').click();return;}if ($('promptDialog').open) $('promptDialog').close('cancel'); else if (!$('midiView').hidden) showStage(); else { persist(); toast('Borrador conservado. Usa Inicio para salir.'); } };
 
 function renderDevices() {
   const previous = $('devices').value;
@@ -195,17 +201,17 @@ action('saveMapping', () => {
   validateMapping(next); localStorage.setItem('mapping', JSON.stringify(next)); mapping = next; received = {}; stream.reset(); liveProgram = null; liveScene = null; renderLive(); render(); toast('Mapeo guardado. No se envió ningún mensaje.');
 });
 function log(direction, bytes) {
-  logs.unshift(`${new Date().toLocaleTimeString()} ${direction} ${bytes.map(n => n.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`);
+  logs.unshift(`${new Date().toLocaleTimeString()} ${direction} ${bytes.slice(0,20).map(n => n.toString(16).padStart(2,'0').toUpperCase()).join(' ')}${bytes.length>20?` … (${bytes.length} bytes)`:''}`);
   logs = logs.slice(0, 80); $('midiLog').textContent = logs.join('\n');
 }
-function send(bytes) { if (!connection.send || !native) throw new Error('Conecta un puerto de envío MIDI desde Android.'); native.sendMidi(JSON.stringify(bytes)); }
+function send(bytes) { if(stage?.busy||nux.busy)throw new Error('Operación NUX en curso.');if (!connection.send || !native) throw new Error('Conecta un puerto de envío MIDI desde Android.'); native.sendMidi(JSON.stringify(bytes)); }
 action('sendPreset', () => { if (!doc) return; send(pc(mapping.channel, program)); });
 action('sendScene', () => { if (!doc || mapping.sceneCC === null) throw new Error('Configura primero el CC de escena.'); send(cc(mapping.channel, mapping.sceneCC, Number(scene[1])-1)); });
 function renderLiveEffects() {
   $('liveEffects').replaceChildren();
   if (!mapping.effects.length) { $('liveEffects').append(el('p', 'Añade los CC de tus efectos en «Configurar canal y controles».', 'muted')); return; }
   for (const effect of mapping.effects) {
-    const row = el('div', undefined, 'live-effect'), title = el('div'); title.append(el('strong', effect.block), el('small', `CC ${effect.cc} · ${received[effect.block] === undefined ? 'Estado no recibido' : received[effect.block] ? 'ON recibido' : 'OFF recibido'}`));
+    const row = el('div', undefined, 'live-effect'), title = el('div'); title.append(el('strong', ({DLY:'Delay',RVB:'Reverb',EFX:'Overdrive',AMP:'Amplificador',MOD:'Modulación',CMP:'Compresor'})[effect.block]||effect.block), el('small', `CC ${effect.cc} · ${received[effect.block] === undefined ? 'Estado no recibido' : received[effect.block] ? 'ON recibido' : 'OFF recibido'}`));
     const buttons = el('div', undefined, 'actions');
     for (const [text, value] of [['Enviar OFF',effect.off],['Enviar ON',effect.on]]) {
       const button = el('button', text, 'secondary'); button.disabled = !connection.send;
@@ -222,32 +228,39 @@ function renderLive() {
 const stream = new MidiStream(bytes => {
   log('RX', bytes);
   if ((bytes[0] & 15) !== mapping.channel - 1) return;
-  if ((bytes[0] & 240) === 192) { liveProgram = bytes[1]; liveScene = null; received = {}; }
+  if ((bytes[0] & 240) === 192) { liveProgram = bytes[1]; liveScene = null; received = {}; if(!stage?.busy)stage?.follow(); }
   if ((bytes[0] & 240) === 176) {
     // Passive follow uses the observed MG-30 scene CC when no custom mapping exists.
     if (bytes[1] === sceneController(mapping) && bytes[2] <= 2) { liveScene = `S${bytes[2]+1}`; received = {}; }
+    if(!stage?.busy && (bytes[1]<=10 || (bytes[1]===sceneController(mapping)&&bytes[2]<=2)))stage?.follow();
     for (const effect of mapping.effects) if (bytes[1] === effect.cc && [effect.on,effect.off].includes(bytes[2])) received[effect.block] = bytes[2] === effect.on;
   }
   renderLive();
   if ($('follow').checked && liveProgram !== null && doc?.records.has(liveProgram)) { program = liveProgram; if (liveScene) scene = liveScene; render(); }
-});
+}, message=>{log('RX',message);nux.receive(message);});
 window.pocketEvent = safe((type, data) => {
   if (type === 'file') loadDocument(fromBase64(data.base64), data.name);
-  if (type === 'error') toast(data.message, true);
+  if (type === 'error') {nux.disconnect();stage?.invalidate();toast(data.message, true);}
   if (type === 'saved') toast('Archivo exportado. Borrador conservado; no se ha cargado en la NUX.');
   if (type === 'draftSaved' && doc) $('localState').textContent = dirty ? 'Borrador guardado · sin exportar' : 'Archivo local';
   if (type === 'devices') { devices = data; renderDevices(); }
-  if (type === 'connection') { connection = data; received = {}; liveProgram = null; liveScene = null; stream.reset(); $('midiStatus').textContent = data.message; $('connectionBadge').textContent = data.connected ? 'USB MIDI' : 'SIN CONEXIÓN'; $('connectionBadge').classList.toggle('connected', data.connected); renderLive(); render(); }
+  if (type === 'connection') { connection = data;nux.disconnect();stage?.invalidate(); received = {}; liveProgram = null; liveScene = null; stream.reset(); $('midiStatus').textContent = data.message; $('connectionBadge').textContent = data.connected ? 'USB MIDI' : 'SIN CONEXIÓN'; $('connectionBadge').classList.toggle('connected', data.connected); renderLive(); render(); }
   if (type === 'midi') stream.push(data);
   if (type === 'sent') {
     log('TX', data);
+    if(stage?.busy || data[0]===240 || !$('stageView').hidden)return;
     if ((data[0] & 240) === 192 || ((data[0] & 240) === 176 && data[1] === mapping.sceneCC)) received = {};
     else for (const effect of mapping.effects) if (effect.cc === data[1]) delete received[effect.block];
     renderLiveEffects(); toast('Orden MIDI enviada. Ejecución en la NUX sin confirmar.');
   }
+  if(type==='nuxBank'){showStage();stage.importBank(data.bank);}
+  if(type==='nuxBackup')stage.exportBackup(data.bank);
+  if(type==='resume' && connection.connected && !stage?.busy)stage?.follow();
   if (type === 'draft' && !doc) { doc = restoreDraft(data); filename = data.name; program = doc.records.has(data.program) ? data.program : doc.presets[0].program; scene = ['S1','S2','S3'].includes(data.scene) ? data.scene : 'S1'; dirty = Boolean(data.dirty); render(); toast('Borrador recuperado.'); }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 renderMapping(); renderDevices(); render();
+stage=createStage({native,link:nux,document:()=>doc,program:()=>program,connection:()=>connection,channel:()=>mapping.channel,sceneCC:()=>mapping.sceneCC,prompt:promptValue,toast,connectView:()=>showView(true),send:bytes=>{if(!native||!connection.send)throw new Error('Conecta MIDI.');native.sendMidi(JSON.stringify(bytes));}});
+showStage();
 if (native) { native.ready(); native.loadDraft(); }
 else { try { const saved = localStorage.getItem('draft'); if (saved) window.pocketEvent('draft', JSON.parse(saved)); } catch (error) { toast(`Borrador no recuperado: ${error.message}`, true); } }

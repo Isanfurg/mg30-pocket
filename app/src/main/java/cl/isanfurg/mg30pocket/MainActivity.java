@@ -29,9 +29,14 @@ public class MainActivity extends Activity {
     private MidiDevice device;
     private MidiInputPort sendPort;
     private MidiOutputPort receivePort;
-    private int generation = 0, deviceId = -1;
+    private volatile int generation = 0;
+    private int deviceId = -1;
     private byte[] exportBytes;
     private boolean pickerOpen, destroyed;
+    private final java.util.Set<Integer> armedPrograms = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+    private final ByteArrayOutputStream identityFrame = new ByteArrayOutputStream();
+    private volatile String observedFirmware;
+    private long nextMidiAt;
     private final MidiManager.DeviceCallback callback = new MidiManager.DeviceCallback() {
         @Override public void onDeviceAdded(MidiDeviceInfo info) { listDevices(); }
         @Override public void onDeviceRemoved(MidiDeviceInfo info) {
@@ -57,6 +62,13 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.addJavascriptInterface(new Bridge(), "PocketNative");
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                if (!url.startsWith(ORIGIN + "/")) { result.cancel(); return true; }
+                new android.app.AlertDialog.Builder(MainActivity.this).setMessage(message).setPositiveButton("Continuar", (dialog, which) -> result.confirm()).setNegativeButton("Cancelar", (dialog, which) -> result.cancel()).setOnCancelListener(dialog -> result.cancel()).show();
+                return true;
+            }
+        });
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return true; }
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -102,6 +114,7 @@ public class MainActivity extends Activity {
     }
     private void disconnect() {
         generation++;
+        armedPrograms.clear(); observedFirmware = null; identityFrame.reset(); nextMidiAt = 0;
         try { if (sendPort != null) sendPort.close(); } catch (IOException ignored) { /* Already detached. */ }
         try { if (receivePort != null) receivePort.close(); } catch (IOException ignored) { /* Already detached. */ }
         try { if (device != null) device.close(); } catch (IOException ignored) { /* Already detached. */ }
@@ -124,6 +137,24 @@ public class MainActivity extends Activity {
         if (bytes.length != 9902 && bytes.length != MAX) throw new IllegalArgumentException("Tamaño .mg30patch no compatible.");
         return bytes;
     }
+    private byte[] exportData(String name, String encoded) throws Exception {
+        if(name.endsWith(".mg30patch")) return patchBytes(encoded);
+        if(!name.endsWith(".mg30bank.json") || encoded.length()>1800000)throw new IllegalArgumentException("Tipo de exportación no permitido.");
+        byte[] bytes=Base64.decode(encoded,Base64.NO_WRAP);
+        NuxWire.validateBackup(new JSONObject(new String(bytes,StandardCharsets.UTF_8)));
+        return bytes;
+    }
+    private void dispatchMidi(byte[] packet, JSONArray message, boolean nux) {
+        int token=generation;
+        long at=Math.max(android.os.SystemClock.uptimeMillis(),nextMidiAt);nextMidiAt=at+60;
+        main.postAtTime(()->{
+            try {
+                if(token!=generation || sendPort==null)throw new IOException("La conexión MIDI cambió.");
+                if(nux)NuxWire.validate(packet,armedPrograms);
+                sendPort.send(packet,0,packet.length);emit("sent",message);
+            } catch(Exception failure){error(failure);}
+        },at);
+    }
 
     public class Bridge {
         @JavascriptInterface public void ready() { main.post(MainActivity.this::listDevices); }
@@ -137,9 +168,9 @@ public class MainActivity extends Activity {
         }); }
         @JavascriptInterface public void saveFile(String name, String encoded) {
             try {
-                byte[] bytes = patchBytes(encoded);
+                byte[] bytes = exportData(name, encoded);
                 String safeName = name.replaceAll("[^A-Za-z0-9 ._-]", "_");
-                if (!safeName.endsWith(".mg30patch") || safeName.length() > 100) throw new IllegalArgumentException("Nombre de archivo no válido.");
+                if ((!safeName.endsWith(".mg30patch") && !safeName.endsWith(".mg30bank.json")) || safeName.length() > 100) throw new IllegalArgumentException("Nombre de archivo no válido.");
                 main.post(() -> {
                     if (pickerOpen) { emit("error", object("message", "Ya hay un selector abierto.")); return; }
                     try {
@@ -163,6 +194,47 @@ public class MainActivity extends Activity {
             try { if (file.getBaseFile().exists()) emit("draft", new JSONObject(new String(limitedRead(file.openRead(), 3500000), StandardCharsets.UTF_8))); }
             catch (Exception failure) { error(failure); }
         }); }
+        @JavascriptInterface public String storeNuxBackup(String json) {
+            try {
+                if(json==null||json.length()>1267456)throw new IllegalArgumentException("Respaldo demasiado grande.");
+                NuxWire.validateBackup(new JSONObject(json));
+                String id="backup-"+System.currentTimeMillis()+".json";
+                AtomicFile file=new AtomicFile(new File(getFilesDir(),id));FileOutputStream stream=file.startWrite();
+                try{stream.write(json.getBytes(StandardCharsets.UTF_8));file.finishWrite(stream);}catch(Exception failure){file.failWrite(stream);throw failure;}
+                getPreferences(MODE_PRIVATE).edit().putString("lastNuxBackup",id).commit();
+                return id;
+            } catch(Exception failure){error(failure);return "";}
+        }
+        @JavascriptInterface public boolean armNuxTransfer(String id) {
+            try {
+                if(!id.matches("backup-[0-9]+\\.json"))throw new IllegalArgumentException("ID de respaldo no válido.");
+                byte[] bytes=limitedRead(new AtomicFile(new File(getFilesDir(),id)).openRead(),1267456);
+                JSONObject bank=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
+                java.util.Set<Integer> slots=NuxWire.validateBackup(bank);
+                if(observedFirmware==null||!observedFirmware.equals(bank.getString("firmware")))throw new IllegalArgumentException("Identifica la NUX y su firmware antes de escribir.");
+                int token=generation;armedPrograms.clear();armedPrograms.addAll(slots);
+                if(token!=generation||observedFirmware==null){armedPrograms.clear();throw new IOException("La NUX se desconectó al preparar la carga.");}
+                return true;
+            } catch(Exception failure){error(failure);return false;}
+        }
+        @JavascriptInterface public void endNuxTransfer(){main.post(armedPrograms::clear);}
+        @JavascriptInterface public void lastNuxBackup(){io.execute(()->{
+            try{
+                String id=getPreferences(MODE_PRIVATE).getString("lastNuxBackup","");
+                if(!id.matches("backup-[0-9]+\\.json"))throw new IOException("Todavía no hay un respaldo NUX.");
+                byte[] bytes=limitedRead(new AtomicFile(new File(getFilesDir(),id)).openRead(),1267456);
+                emit("nuxBackup",object("bank",new JSONObject(new String(bytes,StandardCharsets.UTF_8))));
+            }catch(Exception failure){error(failure);}
+        });}
+        @JavascriptInterface public void keepScreen(boolean enabled){main.post(()->{if(enabled)getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);});}
+        @JavascriptInterface public void sendNux(String json){
+            try{
+                JSONArray data=new JSONArray(json);if(data.length()>222)throw new IllegalArgumentException("Mensaje NUX demasiado largo.");
+                byte[] bytes=new byte[data.length()];
+                for(int i=0;i<bytes.length;i++){Object n=data.get(i);if(!(n instanceof Integer)||(Integer)n<0||(Integer)n>255)throw new IllegalArgumentException("Byte NUX no válido.");bytes[i]=(byte)(int)(Integer)n;}
+                main.post(()->dispatchMidi(bytes,data,true));
+            }catch(Exception failure){error(failure);}
+        }
         @JavascriptInterface public void disconnectMidi() { main.post(() -> { disconnect(); emit("connection", object("connected", false, "message", "MIDI desconectado.")); }); }
         @JavascriptInterface public void connectMidi(int id, int input, int output) { main.post(() -> {
             if (midi == null) { emit("error", object("message", "Este teléfono no ofrece MIDI.")); return; }
@@ -192,6 +264,12 @@ public class MainActivity extends Activity {
                                 byte[] copy = Arrays.copyOfRange(data, offset, offset + count);
                                 main.post(() -> {
                                     if (token != generation || count > 4096) return;
+                                    for(byte value:copy){
+                                        int unsigned=value&255;
+                                        if(unsigned==240)identityFrame.reset();
+                                        if(unsigned<248 && identityFrame.size()<4096)identityFrame.write(unsigned);
+                                        if(unsigned==247){String firmware=NuxWire.identity(identityFrame.toByteArray());if(firmware!=null)observedFirmware=firmware;identityFrame.reset();}
+                                    }
                                     JSONArray bytes = new JSONArray(); for (byte value : copy) bytes.put(value & 255);
                                     emit("midi", bytes);
                                 });
@@ -217,13 +295,7 @@ public class MainActivity extends Activity {
                 }
                 int type = packet[0] & 240;
                 if (!((type == 192 && length == 2) || (type == 176 && length == 3 && (packet[1] & 255) <= 119))) throw new IllegalArgumentException("No se permiten SysEx ni Channel Mode.");
-                main.post(() -> {
-                    try {
-                        if (sendPort == null) throw new IOException("Conecta un puerto de envío MIDI.");
-                        sendPort.send(packet, 0, packet.length);
-                        emit("sent", message);
-                    } catch (Exception failure) { error(failure); }
-                });
+                main.post(() -> dispatchMidi(packet, message, false));
             } catch (Exception failure) { error(failure); }
         }
     }
@@ -239,7 +311,11 @@ public class MainActivity extends Activity {
             try {
                 if (request == OPEN) {
                     byte[] bytes = limitedRead(getContentResolver().openInputStream(uri), MAX);
-                    if (bytes.length != 9902 && bytes.length != MAX) throw new IOException("Se admite un preset o banco de 128 en formato 9902 bytes por preset.");
+                    if ((bytes.length != 9902 && bytes.length != MAX) || (bytes.length>1 && bytes[0]=='{' && bytes[1]!=0)) {
+                        JSONObject bank;
+                        try{bank=new JSONObject(new String(bytes,StandardCharsets.UTF_8));NuxWire.validateBackup(bank);}catch(Exception failure){throw new IOException("Archivo .mg30patch o banco MIDI no compatible.");}
+                        emit("nuxBank",object("bank",bank));return;
+                    }
                     String name = "Preset importado";
                     try (android.database.Cursor cursor = getContentResolver().query(uri, new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
                         if (cursor != null && cursor.moveToFirst()) name = cursor.getString(0);
@@ -260,6 +336,11 @@ public class MainActivity extends Activity {
     // API 33+ uses the registered predictive-back callback; this covers Android 8–12.
     @android.annotation.SuppressLint("GestureBackNavigation")
     @Override public void onBackPressed() { handleBack(); }
+    @Override protected void onResume(){super.onResume();if(web!=null)emit("resume",object("ok",true));}
+    @Override protected void onStop(){
+        super.onStop();
+        if(!armedPrograms.isEmpty()){armedPrograms.clear();emit("error",object("message","Carga detenida al ocultar la app. El respaldo previo se conserva."));}
+    }
     @Override protected void onDestroy() {
         destroyed = true;
         if (midi != null) midi.unregisterDeviceCallback(callback);

@@ -1,19 +1,20 @@
 // MIDI is a byte stream, not one complete message per Android callback.
 export class MidiStream {
-  constructor(receive) { this.receive = receive; this.reset(); }
-  reset() { this.status = 0; this.pending = []; this.sysex = false; }
+  constructor(receive, receiveSysEx = () => {}) { this.receive = receive; this.receiveSysEx = receiveSysEx; this.reset(); }
+  reset() { this.status = 0; this.pending = []; this.sysex = false; this.frame = []; }
   push(bytes) {
     for (const byte of bytes) {
       if (!Number.isInteger(byte) || byte < 0 || byte > 255) { this.reset(); continue; }
       if (byte >= 0xf8) continue; // Realtime bytes may interrupt any message.
-      if (byte === 0xf0) { this.reset(); this.sysex = true; continue; }
-      if (byte === 0xf7) { this.reset(); continue; }
+      if (byte === 0xf0) { this.reset(); this.sysex = true; this.frame = [byte]; continue; }
+      if (byte === 0xf7) { const frame = this.sysex ? [...this.frame, byte] : null; this.reset(); if (frame) this.receiveSysEx(frame); continue; }
       if (byte >= 0x80) {
         this.sysex = false; this.pending = [];
         this.status = byte < 0xf0 ? byte : 0;
         continue;
       }
-      if (this.sysex || !this.status) continue;
+      if (this.sysex) { this.frame.push(byte); if (this.frame.length > 4096) this.reset(); continue; }
+      if (!this.status) continue;
       this.pending.push(byte);
       const size = [0xc0, 0xd0].includes(this.status & 0xf0) ? 1 : 2;
       if (this.pending.length === size) { this.receive([this.status, ...this.pending]); this.pending = []; }
