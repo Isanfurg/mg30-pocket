@@ -1,0 +1,11 @@
+.gradle/
+**/build/
+local.properties
+.idea/
+*.jks
+*.keystore
+*.mg30patch
+*.wav
+dist/
+node_modules/
+*.private.*

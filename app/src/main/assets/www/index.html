@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d171e">
+  <title>MG30 Pocket</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top"><div class="brand"><span class="brand-icon">M</span><div><strong>MG30 <span>Pocket</span></strong><small>Tu pedalboard, en el bolsillo.</small></div></div><span id="connectionBadge" class="badge">SIN CONEXIÓN</span></header>
+  <main>
+    <section id="editorView">
+      <div class="section-heading"><div><span class="eyebrow">BIBLIOTECA LOCAL</span><h1 id="editorTitle">Tu sonido.<br><span>Escena por escena.</span></h1></div><button id="import" class="primary">＋ Importar</button></div>
+      <p class="muted" id="fileName">Importa un preset o un banco .mg30patch de QuickTone.</p>
+      <div id="welcome" class="welcome"><div class="empty-art" aria-hidden="true">◉ ━ ◈ ━ ◉</div><h2>Arma tu próximo sonido</h2><p>Ve la cadena, cambia efectos y ajusta tus tres escenas. El archivo original se conserva para poder volver atrás.</p><button id="demo" class="secondary">Explorar preset de demostración</button><small>Generado por la app · sin IR de terceros</small></div>
+      <div id="workspace" hidden>
+        <div class="preset-bar"><label class="grow">PRESET<select id="preset"></select></label><button id="rename" class="icon-button" aria-label="Renombrar preset">✎</button></div>
+        <div class="scene-tabs" role="group" aria-label="Escenas"><button data-scene="S1">S1 <small>Base</small></button><button data-scene="S2">S2 <small>Crecimiento</small></button><button data-scene="S3">S3 <small>Melodía</small></button></div>
+        <div class="context-strip"><span id="localState">Archivo local</span><label>Tempo <input id="tempo" type="number" min="40" max="240" aria-label="Tempo de la escena"> BPM</label></div>
+        <div class="section-heading compact"><h2>Cadena de señal</h2><span class="muted">Toca un bloque</span></div>
+        <div id="chain" class="chain"></div>
+        <section id="blockEditor" class="panel"></section>
+        <div class="actions"><button id="exportPreset" class="primary">Exportar preset</button><button id="exportBank" class="secondary">Exportar banco</button><button id="copyScene" class="secondary">Copiar escena</button><button id="reset" class="text-button">Restaurar preset original</button></div>
+        <p class="notice">Los controles de esta pantalla editan el archivo. Para cargarlo en la NUX, expórtalo e impórtalo con QuickTone. La app todavía no transmite bancos ni parámetros por SysEx.</p>
+      </div>
+    </section>
+    <section id="midiView" hidden>
+      <span class="eyebrow">USB · MIDI</span><h1>MIDI en vivo</h1>
+      <p class="muted">Conecta la NUX por cable USB de datos y adaptador OTG. No requiere internet.</p>
+      <section class="panel"><div class="section-heading compact"><h2>Conexión USB</h2><button id="refreshDevices" class="text-button">Actualizar</button></div><label>Dispositivo<select id="devices"></select></label><div class="two-col"><label>Enviar hacia NUX<select id="sendPort"></select></label><label>Recibir desde NUX<select id="receivePort"></select></label></div><div class="actions"><button id="connect" class="primary">Conectar MIDI</button><button id="disconnect" class="secondary">Desconectar</button></div><p id="midiStatus" class="muted">Sin conexión. El editor funciona sin pedalera.</p></section>
+      <section class="panel"><div class="section-heading compact"><h2>Pedalera en vivo</h2><label class="inline"><input id="follow" type="checkbox" checked> Seguir selección</label></div><div class="live-display"><strong id="livePreset">—</strong><span id="liveScene">Esperando mensajes MIDI</span></div><p class="notice">Identifica preset y escena cuando la NUX los comunica. El sonido y los parámetros visibles provienen del archivo importado; no son una lectura completa de la pedalera.</p><div class="actions"><button id="sendPreset" class="secondary">Activar preset seleccionado</button><button id="sendScene" class="secondary">Activar escena seleccionada</button></div></section>
+      <section class="panel"><h2>Pedales por MIDI</h2><p class="muted">Configura los mismos CC que tengas asignados en QuickTone. ON/OFF envía una orden; solo se muestra como recibido si llega respuesta MIDI.</p><div id="liveEffects"></div></section>
+      <details class="panel"><summary>Configurar canal y controles</summary><div class="two-col"><label>Canal MIDI<input id="channel" type="number" min="1" max="16" value="1"></label><label>CC de escena<input id="sceneCC" type="number" min="0" max="119" placeholder="Sin asignar"></label></div><p class="notice">Nuestra MG-30 emitió CC <strong>80 decimal</strong> (0x50), con valores 0/1/2 para S1/S2/S3. Confirma el mapeo de recepción de tu pedalera antes de habilitar el envío.</p><div id="mappingRows"></div><button id="saveMapping" class="primary">Guardar mapeo</button><p class="muted">Deja un CC vacío para desactivar ese control. Los cambios de mapeo borran los estados recibidos anteriores.</p></details>
+      <details class="panel"><summary>Monitor MIDI</summary><p class="muted">RX recibido · TX enviado, sin confirmar ejecución. No se envía SysEx.</p><pre id="midiLog">Sin mensajes.</pre></details>
+    </section>
+  </main>
+  <nav class="bottom" aria-label="Pantallas"><button id="editorTab" class="active">▦ <span>Presets</span></button><button id="midiTab">⌁ <span>MIDI en vivo</span></button></nav>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="promptDialog"><form method="dialog"><h2 id="promptTitle"></h2><label id="promptLabel" for="promptInput"></label><input id="promptInput" maxlength="16" autocomplete="off"><div class="actions"><button value="cancel" class="secondary">Cancelar</button><button value="ok" class="primary">Guardar</button></div></form></dialog>
+  <input id="browserFile" type="file" accept=".mg30patch" hidden>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
