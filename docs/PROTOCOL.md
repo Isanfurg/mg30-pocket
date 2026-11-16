@@ -4,7 +4,7 @@ Fuente primaria comunitaria: https://github.com/voronkovd/nux-mg30-mcp/blob/main
 
 ## Formato y perfil
 
-Se acepta MG-30 cl?sica identificada como 5.0.2, 6.0.2 o 6.0.5 y respuestas de 220 bytes de cuerpo que decodifiquen a tres escenas v?lidas. MKII, otros firmwares o tama?os se rechazan para SysEx. Esta compatibilidad estructural no reemplaza la prueba f?sica: 0.2 est? probada con simulador de hardware.
+Se acepta MG-30 cl?sica identificada como 5.0.2, 6.0.2 o 6.0.5 y respuestas de 220 bytes de cuerpo que decodifiquen a tres escenas v?lidas. MKII, otros firmwares o tama?os se rechazan para SysEx. La lectura y CC temporales se comprobaron adem?s en una MG-30 f?sica 6.0.5 desde PC: identidad, selecci?n, seis partes de 220 bytes, codec reversible exacto, mezcla CC54, bypass CC7 y escena CC80. Se restaur? el estado y las tres partes del buffer coincidieron exactamente con la captura inicial. No se enviaron escrituras persistentes. USB Android y carga a memoria siguen pendientes.
 
 Registro local: slot de 4 bytes, tres escenas de 142, recurso opaco desde 430 hasta 9902. El payload MIDI de 213 bytes contiene grupos de tres bytes de 7 bits que llevan dos bytes de escena de 8 bits en sus 16 bits inferiores. Se conservan los 5 bits superiores de la plantilla le?da; no se truncan los flags de 8 bits del archivo. El fixture ajeno valida nombre, ampli, ganancia, padding y roundtrip.
 

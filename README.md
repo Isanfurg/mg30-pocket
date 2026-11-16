@@ -2,7 +2,7 @@
 
 App Android gratuita y offline para NUX MG-30: botonera para tablet, edici?n live por USB MIDI y carga de ajustes de presets/bancos. Proyecto independiente, sin afiliaci?n con NUX.
 
-**0.2.0 experimental: la integraci?n nueva se verific? con hardware simulado, no con una NUX f?sica.** Usa una copia del banco y prueba primero un slot prescindible. No se transfieren archivos IR/NAM: deben estar ya instalados en los mismos destinos. No equivale a restaurar un banco completo con sus recursos.
+**0.2.0 experimental: lectura y controles MIDI temporales verificados en una MG-30 f?sica 6.0.5 por USB desde PC.** La conexi?n Android y la carga persistente siguen pendientes de prueba f?sica. Usa una copia del banco y prueba primero un slot prescindible. No se transfieren archivos IR/NAM: deben estar ya instalados en los mismos destinos. No equivale a restaurar un banco completo con sus recursos.
 
 [Descargar APK de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.2.0) ? [Protocolo y l?mites](docs/PROTOCOL.md)
 
@@ -27,7 +27,7 @@ Android 8+, WebView actualizado, tel?fono/tablet con USB host/OTG y MIDI de Andr
 5. Los cambios live quedan sin guardar. **Guardar en NUX** prepara respaldo, revisi?n y escritura persistente con confirmaci?n.
 6. Para letras: abre ambas apps en pantalla dividida usando el men? de aplicaciones recientes de Android. El procedimiento depende de la tablet. Mant?n MG30 Pocket visible durante transferencias.
 
-Se filtra MG-30 cl?sica con firmware 5.0.2/6.0.2/6.0.5 y layout de 220 bytes validado; otros modelos/tama?os se rechazan. Es un filtro estructural: la prueba f?sica sigue pendiente. Los controles especiales/intercambiados y modelos desconocidos se conservan, sin inventar sliders. Si giras knobs f?sicos que no emiten MIDI, pulsa Leer NUX.
+Se filtra MG-30 cl?sica con firmware 5.0.2/6.0.2/6.0.5 y layout de 220 bytes validado; otros modelos/tama?os se rechazan. Es un filtro estructural: la carga persistente y el USB Android siguen pendientes de prueba f?sica. Los controles especiales/intercambiados y modelos desconocidos se conservan, sin inventar sliders. Si giras knobs f?sicos que no emiten MIDI, pulsa Leer NUX.
 
 ## Archivos y carga desde el celular
 
@@ -62,7 +62,9 @@ adb shell am instrument -w cl.isanfurg.mg30pocket.test/cl.isanfurg.mg30pocket.Sm
 
 Validado: **23 pruebas Node**, compilaci?n/lint sin errores y smoke instrumentado en Android 16. Este ?ltimo verifica editor/borrador nativo y, con un peer simulado, lectura NUX, escenas, bypass, slider confirmado, ausencia de escritura antes de confirmar, respaldo, tres ACK, commit/relectura y vistas ancha/estrecha. La prueba del peer no abre USB f?sico.
 
-Pendiente con hardware: tablet/cable/NUX, CC predeterminados de esa unidad, roundtrip real y selector de archivos. No usar esta versi?n sin probarla primero en ensayo y en un destino respaldado. El c?digo no incluye sonidos, IR ni perfiles privados.
+Comprobado en hardware f?sico desde PC: identidad 6.0.5, estado actual, tres partes del buffer y memoria, roundtrip del codec sin cambiar bytes, mezcla de Digital Delay por CC54, bypass conservando modelo por CC7 y escena por CC80. Los controles se restauraron y las tres partes del buffer quedaron id?nticas a la lectura previa; no se enviaron escrituras persistentes.
+
+Pendiente: conexi?n USB de la tablet, carga persistente, recursos IR/NAM y selector de archivos. No usar esta versi?n sin probarla primero en ensayo y en un destino respaldado. El c?digo no incluye sonidos, IR ni perfiles privados.
 
 Vista previa del editor en PC: `npm run preview`, http://127.0.0.1:8766 . USB MIDI y almacenamiento nativo funcionan en la APK.
 
