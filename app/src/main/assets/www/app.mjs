@@ -5,6 +5,7 @@ import { MidiStream, cc, pc, validateMapping, sceneController } from './midi.mjs
 import { toBase64, fromBase64, restoreDraft } from './session.mjs';
 import { NuxLink } from './nux.mjs';
 import { createStage } from './stage.mjs';
+import { createPads } from './pads.mjs';
 
 const $ = id => document.getElementById(id);
 const native = window.PocketNative;
@@ -12,6 +13,7 @@ let doc, program, scene = 'S1', block = 'AMP', filename = '', dirty = false, sav
 let devices = [], connection = { connected: false }, liveProgram = null, liveScene = null, logs = [], received = {};
 let mapping = { channel: 1, sceneCC: null, effects: [] };
 let stage;
+let pads;
 const nux = new NuxLink(bytes => { if(!native || !connection.send || !connection.receive) throw new Error('Conecta envío y recepción USB MIDI.'); native.sendNux(JSON.stringify(bytes)); });
 try { const saved = localStorage.getItem('mapping'); if (saved) mapping = validateMapping(JSON.parse(saved)); } catch { /* Ignore incompatible old settings. */ }
 const effectBlocks = ['WAH','GATE','CMP','EFX','AMP','IR','EQ','MOD','DLY','RVB','VOL','SR'];
@@ -155,11 +157,13 @@ action('rename', async () => { const name = await promptValue('Nombre (ASCII, ha
 action('copyScene', async () => { const target = await promptValue(`Copiar ${scene} a S1, S2 o S3`, scene, 2); if (target !== null) safe(() => { if (target === scene) throw new Error('Elige otra escena.'); if (!['S1','S2','S3'].includes(target)) throw new Error('Escena no válida.'); if (!confirm(`¿Reemplazar ${target} con ${scene} en el archivo?`)) return; doc.copyScene(program, scene, target); changed(); toast(`Copiada ${scene} a ${target}.`); })(); });
 action('exportPreset', () => exportFile(false)); action('exportBank', () => exportFile(true));
 action('reset', () => { if (confirm('¿Restaurar este preset al archivo original importado?')) { doc.reset(program); changed(); render(); } });
-function showView(midi) { document.body.classList.remove('stage-mode');$('stageView').hidden=true;$('stageTab').classList.remove('active');$('editorView').hidden = midi; $('midiView').hidden = !midi; $('editorTab').classList.toggle('active', !midi); $('midiTab').classList.toggle('active', midi); window.scrollTo(0, 0); }
-function showStage(){ document.body.classList.add('stage-mode');$('editorView').hidden=true;$('midiView').hidden=true;$('stageView').hidden=false;for(const id of ['editorTab','midiTab'])$(id).classList.remove('active');$('stageTab').classList.add('active');stage?.show();window.scrollTo(0,0); }
+function showView(midi) { if(midi){if(!$('settingsDialog').open)$('settingsDialog').showModal();return;}if($('settingsDialog').open)$('settingsDialog').close();document.body.classList.remove('stage-mode');$('stageView').hidden=true;$('padsView').hidden=true;$('editorView').hidden=false;$('stageTab').classList.add('active');$('padsTab').classList.remove('active');window.scrollTo(0,0); }
+function showStage(){ document.body.classList.add('stage-mode');$('editorView').hidden=true;$('padsView').hidden=true;$('stageView').hidden=false;$('padsTab').classList.remove('active');$('stageTab').classList.add('active');stage?.show();window.scrollTo(0,0); }
+function showPads(){document.body.classList.add('stage-mode');$('stageView').hidden=true;$('editorView').hidden=true;$('padsView').hidden=false;$('stageTab').classList.remove('active');$('padsTab').classList.add('active');pads?.render();window.scrollTo(0,0);}
 action('editorTab', () => showView(false)); action('midiTab', () => showView(true));
 action('stageTab',showStage);
-window.pocketBack = () => { if(stage?.busy){toast('Operación NUX en curso. Mantén la app visible.');return;}if($('stageEditor').open){$('stageEditorClose').click();return;}if($('transferDialog').open){$('transferCancel').click();return;}if ($('promptDialog').open) $('promptDialog').close('cancel'); else if (!$('midiView').hidden) showStage(); else { persist(); toast('Borrador conservado. Usa Inicio para salir.'); } };
+action('padsTab',showPads);action('settingsOpen',()=>showView(true));action('settingsClose',()=>$('settingsDialog').close());
+window.pocketBack = () => { if(stage?.busy){toast('Espera a que termine la operación NUX.');return;}if($('padConfig').open){$('padConfig').close();return;}if($('settingsDialog').open){$('settingsDialog').close();return;}if($('stageEditor').open){$('stageEditorClose').click();return;}if($('transferDialog').open){$('transferCancel').click();return;}if ($('promptDialog').open) $('promptDialog').close('cancel'); else { persist(); toast('Borrador conservado. Usa Inicio para salir.'); } };
 
 function renderDevices() {
   const previous = $('devices').value;
@@ -248,7 +252,7 @@ window.pocketEvent = safe((type, data) => {
   if (type === 'midi') stream.push(data);
   if (type === 'sent') {
     log('TX', data);
-    if(stage?.busy || data[0]===240 || !$('stageView').hidden)return;
+    if(stage?.busy || data[0]===240 || !$('stageView').hidden || !$('padsView').hidden)return;
     if ((data[0] & 240) === 192 || ((data[0] & 240) === 176 && data[1] === mapping.sceneCC)) received = {};
     else for (const effect of mapping.effects) if (effect.cc === data[1]) delete received[effect.block];
     renderLiveEffects(); toast('Orden MIDI enviada. Ejecución en la NUX sin confirmar.');
@@ -260,7 +264,8 @@ window.pocketEvent = safe((type, data) => {
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 renderMapping(); renderDevices(); render();
-stage=createStage({native,link:nux,document:()=>doc,program:()=>program,connection:()=>connection,channel:()=>mapping.channel,sceneCC:()=>mapping.sceneCC,prompt:promptValue,toast,connectView:()=>showView(true),send:bytes=>{if(!native||!connection.send)throw new Error('Conecta MIDI.');native.sendMidi(JSON.stringify(bytes));}});
+stage=createStage({native,link:nux,changed:()=>pads?.render(),document:()=>doc,program:()=>program,connection:()=>connection,channel:()=>mapping.channel,sceneCC:()=>mapping.sceneCC,prompt:promptValue,toast,connectView:()=>showView(true),send:bytes=>{if(!native||!connection.send)throw new Error('Conecta MIDI.');native.sendMidi(JSON.stringify(bytes));}});
+pads=createPads({stage,toast});
 showStage();
 if (native) { native.ready(); native.loadDraft(); }
 else { try { const saved = localStorage.getItem('draft'); if (saved) window.pocketEvent('draft', JSON.parse(saved)); } catch (error) { toast(`Borrador no recuperado: ${error.message}`, true); } }

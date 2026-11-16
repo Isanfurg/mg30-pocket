@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
     private static final String ORIGIN = "https://appassets.androidplatform.net";
     private static final int MAX = 9902 * 128, OPEN = 10, SAVE = 11;
+    private static final boolean BANK_WRITES_ENABLED = false; // Compatibility warning on the physical unit is unresolved.
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private WebView web;
@@ -207,6 +208,7 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public boolean armNuxTransfer(String id) {
             try {
+                if(!BANK_WRITES_ENABLED)throw new IllegalStateException("Carga guardada pausada por el aviso de compatibilidad de firmware.");
                 if(!id.matches("backup-[0-9]+\\.json"))throw new IllegalArgumentException("ID de respaldo no válido.");
                 byte[] bytes=limitedRead(new AtomicFile(new File(getFilesDir(),id)).openRead(),1267456);
                 JSONObject bank=new JSONObject(new String(bytes,StandardCharsets.UTF_8));

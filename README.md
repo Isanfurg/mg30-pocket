@@ -1,49 +1,54 @@
 # MG30 Pocket
 
-App Android gratuita y offline para NUX MG-30: botonera para tablet, edici?n live por USB MIDI y carga de ajustes de presets/bancos. Proyecto independiente, sin afiliaci?n con NUX.
+App Android gratuita y offline para controlar una NUX MG-30 desde una tablet, junto a tu app de letras. Proyecto independiente, sin afiliación con NUX.
 
-**0.2.0 experimental: lectura y controles MIDI temporales verificados en una MG-30 f?sica 6.0.5 por USB desde PC.** La conexi?n Android y la carga persistente siguen pendientes de prueba f?sica. Usa una copia del banco y prueba primero un slot prescindible. No se transfieren archivos IR/NAM: deben estar ya instalados en los mismos destinos. No equivale a restaurar un banco completo con sus recursos.
+[Descargar APK 0.3.0 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.3.0)
 
-[Descargar APK de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.2.0) ? [Protocolo y l?mites](docs/PROTOCOL.md)
+## Dos pestañas
 
-<img src="docs/images/tablet.png" width="750" alt="Botonera en Android con hardware simulado">
+**Editar:** lee el preset actual, sus tres escenas y efectos. Toca un pedal para abrir sus parámetros y ajustar el sonido temporalmente por MIDI, con relectura al soltar el slider. Los modelos desconocidos y controles especiales se conservan, sin inventar controles.
 
-## Botonera para tocar con letras
+**Pads:** ocho botones grandes y configurables. Un toque ejecuta; mantener pulsado unos 650 ms abre la configuración **sin ejecutar la acción**. Desplazar la pantalla o cancelar el gesto tampoco envía MIDI.
 
-- S1/S2/S3 grandes, con nombres personalizables por preset.
-- Pedales llamados **Delay, Reverb, Overdrive, Modulaci?n, Compresor**, etc. Toca el nombre para ajustar; el bot?n inferior enciende/apaga conservando el modelo.
-- Sliders live con relectura al soltar: diferencia entre enviado y confirmado.
-- Preset anterior/siguiente y lectura del sonido actual sin importar un archivo primero.
-- Mantener pantalla encendida opcional. Layout adaptable y Activity redimensionable para usar multiventana junto a tu app de letras. No requiere permiso de superposici?n.
+Cada pad puede tener nombre propio y acción:
 
-## Conectar y controlar
+- Encender/apagar, encender o apagar un efecto: Delay, Reverb, Overdrive, etc.
+- Seleccionar S1, S2 o S3.
+- Seleccionar un preset 01A–32D.
+- Quedar sin asignar.
 
-Android 8+, WebView actualizado, tel?fono/tablet con USB host/OTG y MIDI de Android, cable **de datos** y NUX encendida. No requiere internet, micr?fono ni acceso global al almacenamiento.
+Las asignaciones se guardan en la tablet y pueden configurarse sin pedalera. Guardar un pad no envía MIDI. Se muestra estado activo/inactivo solo cuando hay una lectura de la NUX. Mantener pulsado, botón derecho o Shift+F10 abre la configuración; Enter/Espacio sirven para tocar o mantener con teclado. Seleccionar un preset puede descartar ajustes temporales sin guardar.
 
-1. En **Conexi?n**, elige dispositivo USB y puertos de env?o/recepci?n, y conecta.
-2. En **Botonera ? Leer NUX**, identifica firmware y lee preset, escena y par?metros.
-3. En **Control y conexi?n**, activa ?Mi NUX usa el mapeo MIDI predeterminado? solo si no reasignaste los CC en QuickTone. Se usa el canal configurado en Conexi?n; CC de escena configurado o 80 decimal por defecto.
-4. Cambia escenas, enciende/apaga pedales o toca un pedal para editarlo. Los valores provienen del buffer de la NUX, no de un archivo local.
-5. Los cambios live quedan sin guardar. **Guardar en NUX** prepara respaldo, revisi?n y escritura persistente con confirmaci?n.
-6. Para letras: abre ambas apps en pantalla dividida usando el men? de aplicaciones recientes de Android. El procedimiento depende de la tablet. Mant?n MG30 Pocket visible durante transferencias.
+USB MIDI y archivos locales están en el botón **Ajustes**, sin ocupar otra pestaña. El editor de archivos mantiene importación/exportación `.mg30patch`, copia de escenas y borrador recuperable, conservando el recurso IR/NAM en el archivo.
 
-Se filtra MG-30 cl?sica con firmware 5.0.2/6.0.2/6.0.5 y layout de 220 bytes validado; otros modelos/tama?os se rechazan. Es un filtro estructural: la carga persistente y el USB Android siguen pendientes de prueba f?sica. Los controles especiales/intercambiados y modelos desconocidos se conservan, sin inventar sliders. Si giras knobs f?sicos que no emiten MIDI, pulsa Leer NUX.
+<img src="docs/images/pads.png" width="750" alt="Pads en Android con NUX simulada">
 
-## Archivos y carga desde el celular
+## Estado de compatibilidad
 
-**Archivos** importa un `.mg30patch` individual o banco de 128 registros de 9902 bytes. Permite editar las tres escenas, modelos y par?metros mapeados, bypass, nombre, tempo, copiar escenas y exportar conservando el IR/NAM original. Un borrador separado conserva el documento y su original; no modifica autom?ticamente la NUX.
+**El aviso de firmware de la NUX física sigue sin resolver.** No se cambió ni actualizó su firmware. En 0.3:
 
-En **Botonera**, ?Cargar preset/banco del archivo? usa los slots escritos en el archivo. Antes de confirmar muestra destinos y guarda un respaldo de sus ajustes y del buffer activo. Relee para detectar cambios desde la revisi?n, escribe con ACK por parte, commit y comparaci?n posterior de los tres payloads. Un fallo no se anuncia como ?xito. Empezar por un preset de prueba.
+- La escritura guardada y carga de bancos están bloqueadas tanto en UI como en el bridge Android.
+- No se lanzan consultas propietarias automáticamente al conectar, volver de otra app o recibir cambios MIDI. Leer NUX y acciones live requieren una acción del usuario.
+- IR/NAM no se transfieren. No hay actualización de firmware, reset ni consola SysEx genérica.
+- Lectura y CC temporales funcionaron por USB desde PC en una MG-30 6.0.5: mezcla del delay, bypass conservando modelo y escena. El buffer se restauró exactamente. El usuario informó además de un aviso de compatibilidad durante esas pruebas; no se considera resuelta la integración por haber recibido datos.
+- Falta probar la APK con tablet/cable/NUX físicos e identificar el mensaje completo. Si aparece el aviso, detener las pruebas y conservar el texto/foto para diagnosticarlo.
 
-**IR/NAM no se suben**: ni las muestras del archivo ni perfiles externos. Es obligatorio que esos recursos est?n instalados en los mismos slots. La carga reemplaza ajustes, ruteo y selecci?n de cabina/modelo, conservando los recursos presentes en la pedalera. No usar para mover presets con IR/NAM a destinos distintos sin instalar primero esos recursos.
+La UI y el protocolo se prueban en emulador con un peer simulado. Es una APK experimental para ensayo, no una garantía de funcionamiento en directo.
 
-?Respaldar los 128? exporta ajustes en `.mg30bank.json`; ?Abrir banco MIDI? prepara su restauraci?n al mismo firmware. ?Exportar ?ltimo respaldo previo? permite recuperar la copia autom?tica. Los respaldos no contienen muestras IR/NAM. Exportarlos antes de desinstalar.
+## Conectar
 
-La carga es secuencial, **no at?mica para todo el banco**. Si se desconecta, puede haber destinos ya cargados y otro incompleto. Se conserva la copia previa; no hay rollback autom?tico ni reintentos ciegos. Mant?n USB y la app visibles hasta finalizar.
+Android 8+, WebView actualizado, USB host/OTG, cable de datos y MG-30 encendida. No requiere internet, micrófono ni acceso global a los archivos.
+
+1. Abre Ajustes, selecciona dispositivo USB y puertos de envío/recepción.
+2. Pulsa Leer NUX manualmente para identificar y leer el estado.
+3. En Ajustes → Control y conexión, confirma el mapeo predeterminado solo si no reasignaste los CC en QuickTone. El canal y CC de escena son configurables.
+4. Usa Editar o Pads. Los ajustes del sonido son temporales; el guardado está pausado.
+
+Para letras, usa pantalla dividida desde las aplicaciones recientes de Android. El método depende de la tablet. La Activity es redimensionable y la UI se adapta; no solicita superposición sobre otras apps. Mantener pantalla encendida es opcional. Girar algunos knobs físicos no emite MIDI: pulsa Leer NUX para actualizar.
 
 ## Compilar y probar
 
-JDK 17, SDK 36/Build Tools y Node.js 22+. Gradle 8.13 con checksum y AGP 8.13.1 fijados. Sin dependencias npm ni Android de runtime externas.
+JDK 17, SDK/Build Tools 36, Node.js 22+. Gradle 8.13 y AGP 8.13.1 fijados. Sin dependencias npm ni Android de runtime externas.
 
 ```sh
 npm test
@@ -51,25 +56,19 @@ npm test
 # Windows: .\gradlew.bat ...
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions compila, ejecuta pruebas y lint, y publica el artifact debug. Es una firma de pruebas, sin garant?a de coincidencia con otros builds/CI; conserva exportaciones antes de desinstalar para cambiar de firma.
+APK: `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions ejecuta pruebas, compilación y lint y adjunta una APK debug. La firma local se mantiene entre releases locales; otros builds pueden tener otra firma. Exporta tus archivos antes de desinstalar para cambiar de firma.
 
 ```sh
-# Emulador o instalaci?n de QA: usa fixtures sint?ticos y reemplaza su borrador/mapeo.
+# Solo en instalación de QA: reemplaza borrador y mapeo con fixtures sintéticos.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell am instrument -w cl.isanfurg.mg30pocket.test/cl.isanfurg.mg30pocket.SmokeRunner
 ```
 
-Validado: **23 pruebas Node**, compilaci?n/lint sin errores y smoke instrumentado en Android 16. Este ?ltimo verifica editor/borrador nativo y, con un peer simulado, lectura NUX, escenas, bypass, slider confirmado, ausencia de escritura antes de confirmar, respaldo, tres ACK, commit/relectura y vistas ancha/estrecha. La prueba del peer no abre USB f?sico.
+Pruebas Node: formato y preservación de recursos, MIDI fragmentado, protocolo de transferencia retenido pero bloqueado en producción, gesto de tap/hold/cancel y validación de pads. El smoke Android verifica lectura/control con peer simulado, persistencia del pad, hold sin MIDI, tap exactamente una vez, scroll sin acción y bloqueo de escrituras. No abre USB físico.
 
-Comprobado en hardware f?sico desde PC: identidad 6.0.5, estado actual, tres partes del buffer y memoria, roundtrip del codec sin cambiar bytes, mezcla de Digital Delay por CC54, bypass conservando modelo por CC7 y escena por CC80. Los controles se restauraron y las tres partes del buffer quedaron id?nticas a la lectura previa; no se enviaron escrituras persistentes.
+Preview PC: `npm run preview`, http://127.0.0.1:8766 . El bridge USB MIDI solo está en la APK.
 
-Pendiente: conexi?n USB de la tablet, carga persistente, recursos IR/NAM y selector de archivos. No usar esta versi?n sin probarla primero en ensayo y en un destino respaldado. El c?digo no incluye sonidos, IR ni perfiles privados.
+## Créditos
 
-Vista previa del editor en PC: `npm run preview`, http://127.0.0.1:8766 . USB MIDI y almacenamiento nativo funcionan en la APK.
-
-## Fuentes y licencia
-
-[NUX MG-30](https://nuxaudio.com/product/mg30/) ? [Android MIDI](https://developer.android.com/reference/android/media/midi/package-summary) ? [Protocolo comunitario](https://github.com/voronkovd/nux-mg30-mcp/blob/main/docs/PROTOCOL.md).
-
-MIT. Cr?ditos de c?digo y fixture en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Dibujos de equipo gen?ricos y originales; marcas/modelos pertenecen a sus due?os.
+MIT. [Créditos y licencia del fixture](THIRD_PARTY_NOTICES.md) · [Detalles de protocolo y funciones pausadas](docs/PROTOCOL.md). Dibujos de equipo genéricos y originales; marcas/modelos pertenecen a sus dueños. No se incluyen bancos personales, IR, NAM ni audio privados.

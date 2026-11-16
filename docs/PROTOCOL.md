@@ -1,5 +1,7 @@
 # Protocolo en MG30 Pocket 0.2
 
+**Cambio en 0.3:** escritura/carga bloqueada en UI y en `armNuxTransfer` de Android. El aviso de firmware reportado en la unidad física sigue pendiente de diagnóstico. Las consultas automáticas también están suspendidas; las consultas y acciones live son manuales. El flujo de transferencia descrito abajo queda como documentación y pruebas del código retenido, no como una función habilitada de 0.3.
+
 Fuente primaria comunitaria: https://github.com/voronkovd/nux-mg30-mcp/blob/main/docs/PROTOCOL.md (ingenier?a inversa en 5.0.2, no especificaci?n oficial). El fixture sint?tico de ese proyecto verifica la conversi?n; su MIT est? en test/fixtures/UPSTREAM-LICENSE.txt. No contiene recursos de audio ni sonidos del usuario.
 
 ## Formato y perfil

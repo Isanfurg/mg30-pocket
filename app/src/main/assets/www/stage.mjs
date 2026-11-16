@@ -16,7 +16,7 @@ export function createStage(ctx) {
   const enabled=()=>ctx.connection().send&&ctx.connection().receive&&profile()&&Boolean(snapshot())&&!api.busy;
   const text=message=>{$('stageStatus').textContent=message;};
   const progress=(done,total)=>{$('stageTransfer').textContent=`${done}/${total} presets · mantén USB conectado y la app visible`;};
-  function controls(){document.querySelectorAll('#stageView button,#stageEditor input,#stageEditorClose').forEach(b=>{b.disabled=api.busy;});for(const id of ['stageTab','editorTab','midiTab'])$(id).disabled=api.busy;}
+  function controls(){document.querySelectorAll('#stageView button,#stageEditor input,#stageEditorClose').forEach(b=>{b.disabled=api.busy;});for(const id of ['stageTab','padsTab','editorTab','midiTab','padsSync'])$(id).disabled=api.busy;for(const id of ['stageSave','stageUploadOne','stageUploadAll','stageBackup','stageImportBank'])$(id).disabled=true;}
   async function run(work){if(api.busy){ctx.toast('Espera a que termine la operación.',true);return;}api.busy=true;controls();render();try{return await work();}catch(error){link.snapshot=null;if($('stageEditor').open)$('stageEditor').close();text(error.message);ctx.toast(error.message,true);}finally{api.busy=false;controls();render();}}
   function bind(id,work){$(id).addEventListener('click',()=>run(work));}
   async function refresh(){await parameterJobs;const value=await link.refresh();text(`NUX ${link.identity.firmware} · valores leídos por USB${dirtyLive?' · cambios en vivo sin guardar':''}`);render();return value;}
@@ -24,6 +24,7 @@ export function createStage(ctx) {
   async function channel(bytes){ctx.send(bytes);await new Promise(resolve=>setTimeout(resolve,90));}
   async function changeScene(target){requireLive();return run(async()=>{await channel(cc(ctx.channel(),ctx.sceneCC()??80,target));await refresh();if(snapshot().scene!==target)throw new Error('Escena sin confirmar. Revisa el CC de escena.');});}
   function render(){
+    ctx.changed?.();
     const state=snapshot(), preset=state?.preset, available=enabled();
     document.body.classList.toggle('stage-ready',Boolean(state));
     $('stagePreset').textContent=preset?`${preset.slot} · ${preset.name}`:'Sin preset leído';
@@ -52,7 +53,7 @@ export function createStage(ctx) {
     const state=snapshot();if(!state)return;
     const effect=state.preset.scenes[state.scene].blocks[selectedBlock];
     $('stageEditorTitle').textContent=`${NAMES[selectedBlock]} · S${state.scene+1}`;
-    $('stageEditorState').textContent='Los sliders cambian la NUX por MIDI. Se relee al soltar; Guardar en NUX conserva el sonido.';
+    $('stageEditorState').textContent='Los sliders cambian la NUX por MIDI y se releen al soltar. Los ajustes son temporales; el guardado sigue pausado por compatibilidad.';
     $('stageParameters').replaceChildren();
     const model=catalog.models.find(m=>m.block===selectedBlock&&m.id===effect.modelId);
     if(!model||!['CMP','EFX','AMP','EQ','GATE','MOD','DLY','RVB'].includes(selectedBlock)){$('stageParameters').append(make('p','Controles especiales conservados: no se interpretan como parámetros numéricos.','muted'));return;}
@@ -125,12 +126,23 @@ export function createStage(ctx) {
   api.show=()=>{shown=true;render();};
   api.invalidate=()=>{link.snapshot=null;dirtyLive=false;clearTimeout(knobTimer);if($('stageEditor').open)$('stageEditor').close();render();};
   let followTimer;
-  api.follow=()=>{api.invalidate();clearTimeout(followTimer);followTimer=setTimeout(()=>{if(!api.busy&&ctx.connection().send&&ctx.connection().receive)run(refresh);},200);};
+  api.follow=()=>{api.invalidate();clearTimeout(followTimer);text('La selección cambió. Pulsa Leer NUX para actualizar; las consultas automáticas están pausadas por el aviso de compatibilidad.');};
   api.exportBackup=bank=>exportBank(bank,'MG30-previo-a-carga.mg30bank.json');
-  api.importBank=bank=>run(async()=>{
-    validateBank(bank);if(!link.identity)await link.identify();if(bank.firmware!==link.identity.firmware)throw new Error('El banco pertenece a otro firmware.');
-    const backup=await link.exclusive(()=>link.backup(bank.records.map(r=>r.program),progress));await review({backup,bank,epoch:link.epoch});
-  });
+  api.importBank=()=>ctx.toast('Carga de bancos pausada hasta resolver la compatibilidad.',true);
+  api.state=()=>snapshot();
+  api.read=()=>run(refresh);
+  api.executePad=pad=>{
+    if(!enabled()){ctx.toast('Lee la NUX y habilita su perfil para ejecutar pads. Mantener pulsado sí permite configurarlos.',true);return;}
+    if(pad.action==='scene')return changeScene(pad.scene);
+    return run(async()=>{
+      if(pad.action==='preset'){await channel(pc(ctx.channel(),pad.program));await refresh();if(snapshot().program!==pad.program)throw new Error('Preset sin confirmar.');return;}
+      const effect=current().scenes[snapshot().scene].blocks[pad.block];
+      if(!effect||decodeScene(snapshot().parts[snapshot().scene])[catalog.layout[pad.block].model_offset]&128)throw new Error('Bloque especial sin control live.');
+      const desired=pad.action==='toggle'?!effect.enabled:pad.action==='on';
+      await channel(liveSwitch(ctx.channel(),pad.block,effect.modelId,desired));dirtyLive=true;await refresh();
+      const actual=current().scenes[snapshot().scene].blocks[pad.block];if(actual.enabled!==desired||actual.modelId!==effect.modelId)throw new Error('Cambio del pad sin confirmar. Revisa el mapeo MIDI.');
+    });
+  };
   api.isShown=()=>shown;
   render();return api;
 }

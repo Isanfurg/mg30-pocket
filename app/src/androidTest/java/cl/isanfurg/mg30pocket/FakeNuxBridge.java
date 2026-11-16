@@ -16,7 +16,7 @@ public final class FakeNuxBridge {
     private int[][] current;
     private int program=24,scene=0;
     private Set<Integer> armed=new HashSet<>();
-    public int writes=0,commits=0;
+    public int writes=0,commits=0,channelMessages=0;
     public FakeNuxBridge(WebView web,Context tests,Context target) throws Exception {
         this.web=web;this.target=target;
         try(InputStream input=tests.getAssets().open("preset_07A.json");ByteArrayOutputStream output=new ByteArrayOutputStream()){
@@ -46,7 +46,7 @@ public final class FakeNuxBridge {
     }
     @JavascriptInterface public boolean armNuxTransfer(String id){try{if(!"qa-backup".equals(id)||!new File(target.getFilesDir(),"qa-bank-backup.json").exists())return false;try(FileInputStream in=new FileInputStream(new File(target.getFilesDir(),"qa-bank-backup.json"));ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buffer=new byte[2048];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);armed=NuxWire.validateBackup(new JSONObject(out.toString("UTF-8")));}return true;}catch(Exception e){fail(e);return false;}}
     @JavascriptInterface public void sendMidi(String data){try{
-        int[] b=ints(new JSONArray(data));
+        int[] b=ints(new JSONArray(data));channelMessages++;
         if((b[0]&240)==192){program=b[1];current=copy(record(program));scene=0;}
         if((b[0]&240)==176){int controller=b[1],value=b[2];if(controller==80)scene=value;else{int[] raw=decode(current[scene]);if(controller<=10)raw[controller]=value;else if(controller>=54&&controller<=61)raw[62+controller-54]=value;encode(raw,current[scene]);}}
         emit("sent",json(b));
