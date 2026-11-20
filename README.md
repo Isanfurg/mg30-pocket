@@ -6,17 +6,19 @@
 
 Azul noche, marfil y dorado suave; pedales y pads identificados por familia de efecto, estados con texto y luz, escenas grandes y controles táctiles. Una cruz pequeña en la marca y la firma «Para Su gloria · Salmo 150:6» acompañan la interfaz sin ocupar los controles. Todo funciona offline, sin fuentes ni imágenes remotas. Incluye icono Android y archivos PNG/SVG para la comunidad.
 
-### Novedades 0.4.0
+### Selector visual 0.4.2
 
-En **Editar**, toca un pedal, elige **Modelo de efecto / ampli** y pulsa **Cambiar modelo**. Permite cambiar overdrive, ampli, compresor, EQ, puerta, modulación, delay y reverb desde el catálogo de modelos normales. Conserva el bypass y modifica solo la escena actual; relee la NUX para confirmar el resultado y mostrar los parámetros del nuevo modelo. No envía parámetros por defecto: revisa los valores y el nivel después del cambio. IR/NAM y modelos especiales quedan fuera de este selector.
+En **Editar**, toca un pedal, busca por nombre y elige una tarjeta ilustrada en **Elige tu sonido**. La selección se resalta; la tarjeta del modelo que está sonando indica **Actual en la escena**. Elegir o buscar no envía MIDI: pulsa **Usar este efecto** para aplicarlo. Conserva el bypass y modifica solo la escena actual; relee la NUX para confirmar el resultado y mostrar sus parámetros. No envía valores por defecto: revisa los controles y el nivel después del cambio. IR/NAM y modelos especiales quedan fuera de este selector.
+
+El editor de archivos usa las mismas tarjetas; allí tocar una tarjeta cambia el archivo local. Ilustraciones vectoriales originales, colores por modelo, número de perillas y detalles para tape echo y shimmer; no se descargan fotos ni logos de terceros.
 
 Icono original incluido en Android y como [PNG](docs/images/icon.png) y [SVG para compartir](docs/images/icon.svg), bajo la licencia MIT del proyecto. Los cambios de modelo siguen siendo temporales: el guardado de bancos continúa pausado mientras se investiga el aviso de firmware. No se ha validado este selector con hardware físico.
 
-<img src="docs/images/model-selector.png" width="320" alt="Selector de modelo y controles en Android con NUX simulada">
+<img src="docs/images/drive-models.png" width="320" alt="Tarjetas ilustradas de overdrive con NUX simulada"> <img src="docs/images/model-selector.png" width="320" alt="Selector visual de delays con NUX simulada">
 
 App Android gratuita y offline para controlar una NUX MG-30 desde una tablet, junto a tu app de letras. Proyecto independiente, sin afiliación con NUX.
 
-[Descargar APK 0.4.1 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.1)
+[Descargar APK 0.4.2 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.2)
 
 ## Dos pestañas
 

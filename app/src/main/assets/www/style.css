@@ -58,7 +58,7 @@ button:disabled{opacity:.55}
 .bottom button.active{background:#e6c58b17;color:var(--gold);box-shadow:inset 0 0 0 1px #b69c6d55}
 input[type=range],input[type=checkbox]{accent-color:var(--gold)}
 #stageModelControls{background:#111a29;border:1px solid var(--line);border-radius:14px;padding:16px;margin:18px 0 22px}
-#stageModelApply{margin-top:12px;color:var(--gold);border-color:#a58d6466}
+#stageModelApply{margin-top:16px;width:100%}
 #stageModelControls .muted{margin-bottom:0;font-size:11px}
 dialog{box-shadow:0 24px 90px #0008;border-color:#46516a;border-radius:24px}
 dialog::backdrop{background:#080d17cc}
@@ -79,3 +79,18 @@ dialog::backdrop{background:#080d17cc}
   .bottom{background:#131b2b;padding-top:6px}.bottom button{min-height:46px}
 }
 @media(max-height:480px) and (min-width:700px){.performance-pad[data-kind="scene"] small{display:none}}
+
+.model-picker{min-width:0}.model-picker input[type=search]{margin-top:0}
+.model-selection{color:var(--gold);font-size:12px;margin:12px 0}
+.model-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-height:310px;overflow-y:auto;padding:3px 4px 8px;overscroll-behavior:contain}
+.model-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:0;padding:8px 5px 10px;background:linear-gradient(145deg,#26324a,#172132);border:1px solid #43506a;border-radius:15px;text-align:center}
+.model-card .gear-art{width:100%;height:76px;flex:none;opacity:1}
+.model-card strong{font-size:10px;line-height:1.35;overflow-wrap:anywhere;font-weight:700;margin:4px 0}
+.model-card small{font-size:9px;color:var(--muted);margin-top:auto;padding-top:5px}
+.model-card[aria-pressed=true]{border-color:var(--gold);background:linear-gradient(145deg,#49402f,#252d3a);box-shadow:inset 0 0 0 1px #e6c58b44}
+.model-card[aria-pressed=true] small{color:var(--gold)}
+.model-card[aria-pressed=true]::after{content:'\2713';position:absolute;top:6px;right:8px;color:var(--gold);font-size:12px}
+#stageModelControls h3{font-size:15px;margin:0 0 14px}
+#blockEditor .model-picker{margin:16px 0 24px}
+@media(min-width:600px){.model-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:340px}.model-card .gear-art{height:88px}.model-card strong{font-size:11px}}
+@media(max-width:380px){.model-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:270px}.model-card .gear-art{height:72px}#stageModelControls{padding:12px}}

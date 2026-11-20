@@ -2,6 +2,7 @@ import catalog from './patch-catalog.mjs';
 import { NAMES, PROFILE, liveSwitch, liveParameter, liveModels, liveModel, validateBank, describeParts, decodeScene } from './nux.mjs';
 import { cc, pc } from './midi.mjs';
 import { gearArt } from './gear-art.mjs';
+import { createModelPicker } from './model-picker.mjs';
 import { toBase64 } from './session.mjs';
 
 export function createStage(ctx) {
@@ -58,13 +59,11 @@ export function createStage(ctx) {
     $('stageModelControls').replaceChildren();
     const choices=liveModels(selectedBlock);
     if(choices.length){
-      const label=make('label','Modelo de efecto / ampli'),select=make('select'),apply=make('button','Cambiar modelo');
-      select.id='stageModel';select.setAttribute('aria-label','Modelo de efecto / ampli');
-      for(const item of choices){const option=make('option',item.name.replace(/^\d+\.\s*/,''));option.value=item.id;select.append(option);}
-      if(!choices.some(m=>m.id===effect.modelId)){const option=make('option',effect.model);option.value=effect.modelId;option.disabled=true;select.prepend(option);}
-      select.value=effect.modelId;label.append(select);
+      const label=make('h3','Elige tu sonido'),apply=make('button','Usar este efecto','primary');
+      const picker=createModelPicker(selectedBlock,choices,effect.modelId,id=>{apply.disabled=id===effect.modelId;});
+      picker.element.id='stageModel';apply.disabled=true;
       apply.id='stageModelApply';apply.addEventListener('click',()=>{
-        const target=Number(select.value),block=selectedBlock,program=state.program,scene=state.scene;
+        const target=picker.value(),block=selectedBlock,program=state.program,scene=state.scene;
         if(target===effect.modelId)return;
         run(async()=>{
           clearTimeout(knobTimer);await parameterJobs;const now=snapshot();
@@ -75,7 +74,7 @@ export function createStage(ctx) {
           renderEditor();$('stageEditorState').textContent='Modelo confirmado por relectura. Revisa sus parámetros y nivel; cambio temporal sin guardar.';
         });
       });
-      $('stageModelControls').append(label,apply,make('p','Se cambia solo esta escena y se conserva encendido/apagado. No se envían valores por defecto: los parámetros se leen desde la NUX.','muted'));
+      $('stageModelControls').append(label,picker.element,apply,make('p','Elegir una tarjeta no cambia el sonido. Pulsa «Usar este efecto» para aplicarlo a esta escena. Después revisa sus parámetros y nivel.','muted'));
     }
     const model=catalog.models.find(m=>m.block===selectedBlock&&m.id===effect.modelId);
     if(!model||!['CMP','EFX','AMP','EQ','GATE','MOD','DLY','RVB'].includes(selectedBlock)){$('stageParameters').append(make('p','Controles especiales conservados: no se interpretan como parámetros numéricos.','muted'));return;}

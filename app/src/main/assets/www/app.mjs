@@ -1,6 +1,7 @@
 import catalog from './patch-catalog.mjs';
 import { PatchDocument } from './patch-editor.mjs';
 import { gearArt } from './gear-art.mjs';
+import { createModelPicker } from './model-picker.mjs';
 import { MidiStream, cc, pc, validateMapping, sceneController } from './midi.mjs';
 import { toBase64, fromBase64, restoreDraft } from './session.mjs';
 import { NuxLink } from './nux.mjs';
@@ -91,11 +92,9 @@ function renderBlock() {
   try { model = doc.model(program, scene, block); } catch { root.append(el('p', 'Modelo sin mapear. Sus bytes se conservan al exportar.', 'notice')); return; }
   const choices = catalog.models.filter(m => m.block === block && !m.special && m.parameters.length && m.parameters.every(p => p.editable && p.index < catalog.layout[block].capacity && Number.isInteger(p.default) && p.default >= p.min && p.default <= p.max));
   if (choices.length) {
-    const label = el('label', 'Modelo del efecto'); const select = el('select');
-    if (!choices.some(m => m.id === model.id)) { const option = el('option', model.name); option.value = model.id; select.append(option); }
-    for (const candidate of choices) { const option = el('option', candidate.name); option.value = candidate.id; select.append(option); }
-    select.value = model.id; label.append(select); root.append(label);
-    select.addEventListener('change', safe(() => { doc.setModel(program, scene, block, Number(select.value)); changed(); renderChain(); renderBlock(); }));
+    root.append(el('h3','Elige tu sonido'),el('p','Toca una tarjeta para cambiar el modelo en este archivo local.','muted'));
+    const picker=createModelPicker(block,choices,model.id,safe(id=>{doc.setModel(program,scene,block,id);changed();renderChain();renderBlock();}));
+    root.append(picker.element);
   }
   const parameters = el('div', undefined, 'parameters');
   for (const parameter of model.parameters) {
