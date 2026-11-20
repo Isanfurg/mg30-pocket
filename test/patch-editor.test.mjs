@@ -37,7 +37,7 @@ test('rename, scene copying, bypass, model defaults and reset preserve unrelated
   document.copyScene(29, 'S1', 'S3');
   const preset = document.describe(29);
   assert.equal(preset.scenes[2].blocks.RVB.modelId, 2); assert.equal(preset.scenes[2].bpm, 137);
-  assert.equal(preset.scenes[2].blocks.AMP.enabled, false); assert.match(preset.scenes[2].blocks.DLY.subdivision, /puntillo/);
+  assert.equal(preset.scenes[2].blocks.AMP.enabled, false); assert.match(preset.scenes[2].blocks.DLY.subdivision, /Dotted eighth/);
   assert.deepEqual(document.exportPreset(29).subarray(430), source().subarray(430));
   document.reset(29); assert.deepEqual(document.exportPreset(29), source());
 });
@@ -51,7 +51,7 @@ test('measured balance adjusts only calibrated EQ output and refuses double appl
   await applyBalance(document, proposal);
   const output = document.exportPreset(29);
   assert.deepEqual([...output.keys()].filter(i => output[i] !== source()[i]), [4 + 142 + 43]);
-  await assert.rejects(applyBalance(document, proposal), /Vuelve a medir/);
+  await assert.rejects(applyBalance(document, proposal), /Measure again/);
 });
 test('balance refuses stale versions, clipping, excess gain, disabled EQ and missing headroom', async () => {
   const reference = take({ id: 'ref', program: 16, rmsDb: -20 });
@@ -62,5 +62,5 @@ test('balance refuses stale versions, clipping, excess gain, disabled EQ and mis
     assert.ok(proposal.reason);
   }
   document.setEnabled(29, 'S2', 'EQ', false);
-  assert.match((await proposeBalance(document, 29, 'S2', take({ patchFingerprint: await document.fingerprint(29, 'S2') }), reference)).reason, /EQ activo/);
+  assert.match((await proposeBalance(document, 29, 'S2', take({ patchFingerprint: await document.fingerprint(29, 'S2') }), reference)).reason, /active 6-BAND EQ/);
 });

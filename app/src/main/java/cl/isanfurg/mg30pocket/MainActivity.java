@@ -25,6 +25,9 @@ public class MainActivity extends Activity {
     private static final boolean BANK_WRITES_ENABLED = false; // Compatibility warning on the physical unit is unresolved.
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private final ExecutorService aiIo = Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.atomic.AtomicBoolean aiBusy=new java.util.concurrent.atomic.AtomicBoolean();
+    private AiClient ai;
     private WebView web;
     private MidiManager midi;
     private MidiDevice device;
@@ -48,6 +51,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
+        ai=new AiClient(this);
         getWindow().setStatusBarColor(Color.rgb(13, 23, 30));
         getWindow().setNavigationBarColor(Color.rgb(13, 23, 30));
         web = new WebView(this);
@@ -66,7 +70,8 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
                 if (!url.startsWith(ORIGIN + "/")) { result.cancel(); return true; }
-                new android.app.AlertDialog.Builder(MainActivity.this).setMessage(message).setPositiveButton("Continuar", (dialog, which) -> result.confirm()).setNegativeButton("Cancelar", (dialog, which) -> result.cancel()).setOnCancelListener(dialog -> result.cancel()).show();
+                boolean spanish="es".equals(getPreferences(MODE_PRIVATE).getString("language","en"));
+                new android.app.AlertDialog.Builder(MainActivity.this).setMessage(message).setPositiveButton(spanish?"Continuar":"Continue", (dialog, which) -> result.confirm()).setNegativeButton(spanish?"Cancelar":"Cancel", (dialog, which) -> result.cancel()).setOnCancelListener(dialog -> result.cancel()).show();
                 return true;
             }
         });
@@ -77,7 +82,7 @@ public class MainActivity extends Activity {
                 String path = uri.getPath();
                 if (!"https".equals(uri.getScheme()) || !"appassets.androidplatform.net".equals(uri.getHost()) || path == null || !path.startsWith("/assets/") || path.contains("..") || path.contains("\\")) return response("text/plain", new byte[0]);
                 String file = path.substring(8);
-                String type = file.endsWith(".html") ? "text/html" : file.endsWith(".css") ? "text/css" : file.endsWith(".mjs") ? "text/javascript" : "application/octet-stream";
+                String type = file.endsWith(".png") ? "image/png" : file.endsWith(".html") ? "text/html" : file.endsWith(".css") ? "text/css" : file.endsWith(".mjs") ? "text/javascript" : "application/octet-stream";
                 try {
                     WebResourceResponse result = new WebResourceResponse(type, "UTF-8", getAssets().open(file));
                     result.setResponseHeaders(java.util.Collections.singletonMap("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'"));
@@ -158,6 +163,19 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        @JavascriptInterface public void setAppLanguage(String language){if("en".equals(language)||"es".equals(language))getPreferences(MODE_PRIVATE).edit().putString("language",language).apply();}
+        @JavascriptInterface public boolean hasAiKey(){return ai.hasKey();}
+        @JavascriptInterface public boolean saveAiKey(String value){return ai.saveKey(value);}
+        @JavascriptInterface public boolean clearAiKey(){return ai.clearKey();}
+        @JavascriptInterface public void generateAi(String requestId,String request){
+            if(requestId==null||!requestId.matches("[a-zA-Z0-9-]{1,64}"))return;
+            if(!aiBusy.compareAndSet(false,true)){emit("aiResult",object("requestId",requestId,"error","AI_BUSY"));return;}
+            aiIo.execute(()->{
+                try{emit("aiResult",object("requestId",requestId,"response",ai.generate(request)));}
+                catch(Exception failure){String message=failure.getMessage();emit("aiResult",object("requestId",requestId,"error",message!=null&&message.matches("AI_[A-Z0-9_]+")?message:"AI_NETWORK"));}
+                finally{aiBusy.set(false);}
+            });
+        }
         @JavascriptInterface public void ready() { main.post(MainActivity.this::listDevices); }
         @JavascriptInterface public void devices() { main.post(MainActivity.this::listDevices); }
         @JavascriptInterface public void openFile() { main.post(() -> {
@@ -346,7 +364,7 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy() {
         destroyed = true;
         if (midi != null) midi.unregisterDeviceCallback(callback);
-        disconnect(); io.shutdown(); web.removeJavascriptInterface("PocketNative"); web.destroy();
+        ai.close();aiIo.shutdownNow();disconnect(); io.shutdown(); web.removeJavascriptInterface("PocketNative"); web.destroy();
         super.onDestroy();
     }
 }

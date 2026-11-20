@@ -17,6 +17,7 @@ public final class FakeNuxBridge {
     private int program=24,scene=0;
     private Set<Integer> armed=new HashSet<>();
     public int writes=0,commits=0,channelMessages=0;
+    private boolean fakeAiKey;
     public FakeNuxBridge(WebView web,Context tests,Context target) throws Exception {
         this.web=web;this.target=target;
         try(InputStream input=tests.getAssets().open("preset_07A.json");ByteArrayOutputStream output=new ByteArrayOutputStream()){
@@ -37,6 +38,19 @@ public final class FakeNuxBridge {
     private void fail(Exception e){try{emit("error",new JSONObject().put("message",e.toString()));}catch(JSONException ignored){}}
     @JavascriptInterface public void ready(){try{emit("connection",new JSONObject().put("connected",true).put("send",true).put("receive",true).put("message","SIMULADOR QA · sin hardware"));}catch(Exception e){fail(e);}}
     @JavascriptInterface public void devices(){}
+    @JavascriptInterface public boolean hasAiKey(){return fakeAiKey;}
+    @JavascriptInterface public boolean saveAiKey(String key){fakeAiKey=true;return true;}
+    @JavascriptInterface public boolean clearAiKey(){fakeAiKey=false;return true;}
+    @JavascriptInterface public void generateAi(String requestId,String request){try{
+        JSONArray scenes=new JSONArray();for(int i=0;i<3;i++){
+            JSONArray parameters=new JSONArray().put(new JSONObject().put("name","GAIN").put("value",25+i*10));
+            JSONArray blocks=new JSONArray().put(new JSONObject().put("block","AMP").put("modelId",9).put("enabled",true).put("parameters",parameters));
+            scenes.put(new JSONObject().put("scene","S"+(i+1)).put("bpm",120).put("dottedEighth",true).put("blocks",blocks));
+        }
+        JSONObject proposal=new JSONObject().put("name","AI QA").put("summary","Simulated AI fixture. No network.").put("scenes",scenes);
+        JSONObject response=new JSONObject().put("status","completed").put("output",new JSONArray().put(new JSONObject().put("content",new JSONArray().put(new JSONObject().put("type","output_text").put("text",proposal.toString())))));
+        emit("aiResult",new JSONObject().put("requestId",requestId).put("response",response));
+    }catch(Exception e){fail(e);}}
     @JavascriptInterface public void loadDraft(){}
     @JavascriptInterface public void saveDraft(String json){}
     @JavascriptInterface public void keepScreen(boolean enabled){}

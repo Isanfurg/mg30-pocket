@@ -1,66 +1,89 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+
+<html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101521">
-  <title>MG30 Pocket</title><link rel="stylesheet" href="style.css">
+<meta charset="utf-8"/><meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#101521" name="theme-color"/>
+<title>MG30 Pocket</title><link href="style.css" rel="stylesheet"/>
 </head>
 <body>
-  <header class="top"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 5v22M9 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M5 23l4-4 4 4M19 23l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".45"/></svg></span><div><strong>MG30 <span>Pocket</span></strong><small>Hecho para servir. Listo para tocar.</small></div></div><div class="header-actions"><span id="connectionBadge" class="badge">SIN CONEXIÓN</span><button id="settingsOpen" class="icon-button" aria-label="Ajustes">&#9881;</button></div></header>
-  <main>
-    <section id="padsView" hidden>
-      <div class="section-heading"><div><span class="eyebrow">TU SONIDO, AL SERVICIO</span><h1 class="stage-title">Pads en vivo</h1></div><button id="padsSync" class="secondary">Leer NUX</button></div>
-      <p id="padsPreset" class="muted"></p>
-      <div id="padGrid" class="performance-grid"></div>
-      <p class="muted">Un toque ejecuta. Mantener pulsado configura sin ejecutar. Con teclado: Shift + F10.</p>
-    </section>
-    <section id="stageView" hidden>
-      <div class="section-heading"><div><span class="eyebrow">ENCUENTRA TU VOZ</span><h1 class="stage-title">Tu pedalboard</h1></div><button id="stageSync" class="primary">Leer NUX</button></div>
-      <p id="stageStatus" class="muted" role="status">Conecta USB MIDI y pulsa Leer NUX. Puedes usar pantalla dividida con tu app de letras.</p>
-      <div class="stage-top"><strong id="stagePreset">Sin preset leído</strong><label class="inline"><input id="stageAwake" type="checkbox"> Mantener pantalla encendida</label></div>
-      <div id="stageScenes" class="stage-scenes" role="group" aria-label="Cambiar escena en la NUX"></div>
-      <div id="stagePedals" class="stage-pedals"></div>
-      <div class="stage-toolbar"><button id="stagePrevious" class="secondary">← Preset</button><button id="stageNext" class="secondary">Preset →</button><button id="stageNames" class="text-button">Nombrar escenas</button></div>
-      <p class="notice">Toca un pedal para ajustar sus parámetros. Los cambios en vivo son temporales; el guardado sigue pausado por compatibilidad.</p>
-
-
-    </section>
-    <section id="editorView">
-      <div class="section-heading"><div><span class="eyebrow">BIBLIOTECA LOCAL</span><h1 id="editorTitle">Tu sonido.<br><span>Escena por escena.</span></h1></div><button id="import" class="primary">＋ Importar</button></div>
-      <p class="muted" id="fileName">Importa un preset o un banco .mg30patch de QuickTone.</p>
-      <div id="welcome" class="welcome"><div class="empty-art" aria-hidden="true">◉ ━ ◈ ━ ◉</div><h2>Arma tu próximo sonido</h2><p>Ve la cadena, cambia efectos y ajusta tus tres escenas. El archivo original se conserva para poder volver atrás.</p><button id="demo" class="secondary">Explorar preset de demostración</button><small>Generado por la app · sin IR de terceros</small></div>
-      <div id="workspace" hidden>
-        <div class="preset-bar"><label class="grow">PRESET<select id="preset"></select></label><button id="rename" class="icon-button" aria-label="Renombrar preset">✎</button></div>
-        <div class="scene-tabs" role="group" aria-label="Escenas"><button data-scene="S1">S1 <small>Base</small></button><button data-scene="S2">S2 <small>Crecimiento</small></button><button data-scene="S3">S3 <small>Melodía</small></button></div>
-        <div class="context-strip"><span id="localState">Archivo local</span><label>Tempo <input id="tempo" type="number" min="40" max="240" aria-label="Tempo de la escena"> BPM</label></div>
-        <div class="section-heading compact"><h2>Cadena de señal</h2><span class="muted">Toca un bloque</span></div>
-        <div id="chain" class="chain"></div>
-        <section id="blockEditor" class="panel"></section>
-        <div class="actions"><button id="exportPreset" class="primary">Exportar preset</button><button id="exportBank" class="secondary">Exportar banco</button><button id="copyScene" class="secondary">Copiar escena</button><button id="reset" class="text-button">Restaurar preset original</button></div>
-        <p class="notice">Esta pantalla edita un archivo local. Vuelve a Editar para tocar el preset de la pedalera. La carga USB sigue pausada por compatibilidad.</p>
-      </div>
-    </section>
-
-    <footer class="signature"><span aria-hidden="true">✝</span> Para Su gloria <span class="signature-ref">SALMO 150:6</span></footer>
-  </main>
-  <nav class="bottom" aria-label="Pantallas"><button id="stageTab" class="active">&#9638; <span>Editar</span></button><button id="padsTab">&#9673; <span>Pads</span></button></nav>
-  <div id="toast" role="status" aria-live="polite" hidden></div>
-  <dialog id="settingsDialog"><div class="section-heading"><h2>Ajustes</h2><button id="settingsClose" class="secondary">Cerrar</button></div><p class="notice">La carga de bancos está pausada mientras se investiga el aviso de compatibilidad. No se actualizará el firmware.</p><div class="actions"><button id="editorTab" class="secondary">Archivos locales</button><button id="midiTab" hidden>Conexión</button></div>          <details class="panel"><summary>Control y conexión</summary><label class="inline"><input id="stageProfile" type="checkbox"> Mi NUX usa el mapeo MIDI predeterminado</label><p class="muted">Actívalo solo si no cambiaste los CC en QuickTone. Leer NUX identifica el firmware y comprueba el formato. Si cambias algo en la pedalera, pulsa Leer NUX para actualizar los valores.</p><button id="stageConnect" class="secondary">Configurar USB MIDI</button></details>
-<details class="panel"><summary>Funciones pausadas</summary>      <section class="panel"><h2>Carga y guardado pausados</h2><p class="notice">Pendiente resolver el aviso de compatibilidad de tu NUX. No se permiten escrituras guardadas en esta versión.</p><p class="muted">La carga escribe los ajustes de los destinos indicados. Los archivos de IR/NAM no se transfieren: deben estar ya instalados en esos mismos slots. Se conserva un respaldo de ajustes antes de escribir.</p><div class="actions"><button id="stageSave" disabled class="primary">Guardar en NUX</button><button id="stageUploadOne" disabled class="secondary">Cargar preset del archivo</button><button id="stageUploadAll" disabled class="secondary">Cargar banco del archivo</button><button id="stageBackup" disabled class="secondary">Respaldar los 128</button><button id="stageImportBank" disabled class="secondary">Abrir banco MIDI</button><button id="stageLastBackup" class="text-button">Exportar último respaldo previo</button></div><p id="stageTransfer" class="muted" role="status"></p></section></details>
+<header class="top"><div class="brand"><span aria-hidden="true" class="brand-icon"><img alt="" src="app-icon.png"/></span><div><strong>MG30 <span>Pocket</span></strong><small data-i18n="Hecho para servir. Listo para tocar.">Hecho para servir. Listo para tocar.</small></div></div><div class="header-actions"><span class="badge" data-i18n="SIN CONEXIÓN" id="connectionBadge">SIN CONEXIÓN</span><button aria-label="Ajustes" class="icon-button" data-i18n-aria-label="Ajustes" id="settingsOpen">⚙</button></div></header>
+<main>
+<section hidden="" id="padsView">
+<div class="section-heading"><div><span class="eyebrow" data-i18n="TU SONIDO, AL SERVICIO">TU SONIDO, AL SERVICIO</span><h1 class="stage-title" data-i18n="Pads en vivo">Pads en vivo</h1></div><button class="secondary" data-i18n="Leer NUX" id="padsSync">Leer NUX</button></div>
+<p class="muted" id="padsPreset"></p>
+<div class="performance-grid" id="padGrid"></div>
+<p class="muted" data-i18n="Toca para usar · mantén para configurar.">Toca para usar · mantén para configurar.</p>
+</section>
+<section hidden="" id="stageView">
+<div class="section-heading"><div><span class="eyebrow" data-i18n="ENCUENTRA TU VOZ">ENCUENTRA TU VOZ</span><h1 class="stage-title" data-i18n="Tu pedalboard">Tu pedalboard</h1></div><button class="primary" data-i18n="Leer NUX" id="stageSync">Leer NUX</button></div>
+<p class="muted" data-i18n="Conecta USB MIDI y pulsa Leer NUX." id="stageStatus" role="status">Conecta USB MIDI y pulsa Leer NUX.</p>
+<div class="stage-top"><strong data-i18n="Sin preset leído" id="stagePreset">Sin preset leído</strong></div>
+<div aria-label="Cambiar escena en la NUX" class="stage-scenes" id="stageScenes" role="group"></div>
+<div class="stage-pedals" id="stagePedals"></div>
+<div class="stage-toolbar"><button class="secondary" id="stagePrevious">← Preset</button><button class="secondary" id="stageNext">Preset →</button><button class="text-button" data-i18n="Nombrar escenas" id="stageNames">Nombrar escenas</button><button class="secondary" data-i18n="✦ Crear con IA" id="aiOpen">✦ Crear con IA</button></div>
+<p class="notice" data-i18n="Cambios temporales · guardado pausado.">Cambios temporales · guardado pausado.</p>
+</section>
+<section id="editorView">
+<div class="section-heading"><div><span class="eyebrow" data-i18n="BIBLIOTECA LOCAL">BIBLIOTECA LOCAL</span><h1 id="editorTitle"><span data-i18n="Tu sonido.">Tu sonido.</span><br/><span data-i18n="Escena por escena.">Escena por escena.</span></h1></div><button class="primary" data-i18n="＋ Importar" id="import">＋ Importar</button></div>
+<p class="muted" data-i18n="Importa un preset o un banco .mg30patch de QuickTone." id="fileName">Importa un preset o un banco .mg30patch de QuickTone.</p>
+<div class="welcome" id="welcome"><div aria-hidden="true" class="empty-art">◉ ━ ◈ ━ ◉</div><h2 data-i18n="Arma tu próximo sonido">Arma tu próximo sonido</h2><p data-i18n="Importa, edita y exporta tus presets.">Importa, edita y exporta tus presets.</p><button class="secondary" data-i18n="Explorar preset de demostración" id="demo">Explorar preset de demostración</button><small data-i18n="Generado por la app · sin IR de terceros">Generado por la app · sin IR de terceros</small></div>
+<div hidden="" id="workspace">
+<div class="preset-bar"><label class="grow">PRESET<select id="preset"></select></label><button aria-label="Renombrar preset" class="icon-button" data-i18n-aria-label="Renombrar preset" id="rename">✎</button></div>
+<div aria-label="Escenas" class="scene-tabs" data-i18n-aria-label="Escenas" role="group"><button data-scene="S1">S1 <small data-i18n="Base">Base</small></button><button data-scene="S2">S2 <small data-i18n="Crecimiento">Crecimiento</small></button><button data-scene="S3">S3 <small data-i18n="Melodía">Melodía</small></button></div>
+<div class="context-strip"><span data-i18n="Archivo local" id="localState">Archivo local</span><label>Tempo <input aria-label="Tempo de la escena" data-i18n-aria-label="Tempo de la escena" id="tempo" max="240" min="40" type="number"/> BPM</label></div>
+<div class="section-heading compact"><h2 data-i18n="Cadena de señal">Cadena de señal</h2><span class="muted" data-i18n="Toca un bloque">Toca un bloque</span></div>
+<div class="chain" id="chain"></div>
+<section class="panel" id="blockEditor"></section>
+<div class="actions"><button class="primary" data-i18n="Exportar preset" id="exportPreset">Exportar preset</button><button class="secondary" data-i18n="Exportar banco" id="exportBank">Exportar banco</button><button class="secondary" data-i18n="Copiar escena" id="copyScene">Copiar escena</button><button class="text-button" data-i18n="Restaurar preset original" id="reset">Restaurar preset original</button><button class="secondary" data-i18n="✦ Crear con IA" id="aiOpenLocal">✦ Crear con IA</button></div>
+<p class="notice" data-i18n="Archivo local · sin cambios en la pedalera.">Archivo local · sin cambios en la pedalera.</p>
+</div>
+</section>
+<footer class="signature"><span aria-hidden="true">✝</span><span data-i18n="Para Su gloria">Para Su gloria</span><span class="signature-ref" data-i18n="SALMO 150:6">SALMO 150:6</span></footer>
+</main>
+<nav aria-label="Pantallas" class="bottom" data-i18n-aria-label="Pantallas"><button class="active" id="stageTab">▦ <span data-i18n="Editar">Editar</span></button><button id="padsTab">◉ <span>Pads</span></button></nav>
+<div aria-live="polite" hidden="" id="toast" role="status"></div>
+<dialog id="settingsDialog">
+<div class="settings-heading"><div><span class="eyebrow">MG30 POCKET</span><h2 data-i18n="Ajustes">Ajustes</h2></div><button aria-label="Cerrar" class="icon-button" data-i18n-aria-label="Cerrar" id="settingsClose">×</button></div>
+<nav aria-label="Ajustes" class="settings-tabs" data-i18n-aria-label="Ajustes" role="tablist">
+<button aria-controls="settingsGeneral" data-i18n="General" data-settings-tab="general" id="settingsGeneralTab" role="tab">General</button>
+<button aria-controls="settingsUsb" data-settings-tab="usb" id="settingsUsbTab" role="tab">USB</button>
+<button aria-controls="settingsMidi" data-settings-tab="midi" id="settingsMidiTab" role="tab">MIDI</button>
+<button aria-controls="settingsAbout" data-i18n="Acerca de" data-settings-tab="about" id="settingsAboutTab" role="tab">Acerca de</button>
+</nav>
+<section aria-labelledby="settingsGeneralTab" data-settings-panel="general" id="settingsGeneral" role="tabpanel">
+<div class="settings-card"><label data-i18n="Idioma" for="language">Idioma</label><select id="language"><option value="en">English</option><option value="es">Español</option></select></div>
+<div class="settings-card"><label class="setting-switch"><span data-i18n="Pantalla encendida">Pantalla encendida</span><input id="stageAwake" type="checkbox"/></label></div>
+<button class="settings-link" id="editorTab"><span data-i18n="Archivos locales">Archivos locales</span><span aria-hidden="true">↗</span></button>
+<details class="settings-card" id="aiKeyDetails"><summary>OpenAI</summary><p class="setting-hint" data-i18n="Usa tus créditos API. La clave se cifra en este dispositivo.">Usa tus créditos API. La clave se cifra en este dispositivo.</p><label data-i18n="Clave API" for="aiKey">Clave API</label><input autocapitalize="none" autocomplete="new-password" id="aiKey" placeholder="sk-…" spellcheck="false" type="password"/><div class="actions"><button class="primary" data-i18n="Guardar clave" id="aiKeySave">Guardar clave</button><button class="secondary" data-i18n="Borrar clave" id="aiKeyDelete">Borrar clave</button></div><p class="setting-hint" id="aiKeyStatus" role="status"></p></details></section>
+<section aria-labelledby="settingsUsbTab" data-settings-panel="usb" hidden="" id="settingsUsb" role="tabpanel">
 <section id="midiView">
-      <span class="eyebrow">USB · MIDI</span><h1>MIDI en vivo</h1>
-      <p class="muted">Conecta la NUX por cable USB de datos y adaptador OTG. No requiere internet.</p>
-      <section class="panel"><div class="section-heading compact"><h2>Conexión USB</h2><button id="refreshDevices" class="text-button">Actualizar</button></div><label>Dispositivo<select id="devices"></select></label><div class="two-col"><label>Enviar hacia NUX<select id="sendPort"></select></label><label>Recibir desde NUX<select id="receivePort"></select></label></div><div class="actions"><button id="connect" class="primary">Conectar MIDI</button><button id="disconnect" class="secondary">Desconectar</button></div><p id="midiStatus" class="muted">Sin conexión. El editor funciona sin pedalera.</p></section>
-      <section class="panel"><div class="section-heading compact"><h2>Seguimiento del archivo</h2><label class="inline"><input id="follow" type="checkbox" checked> Seguir selección</label></div><div class="live-display"><strong id="livePreset">—</strong><span id="liveScene">Esperando mensajes MIDI</span></div><p class="notice">Identifica preset y escena cuando la NUX los comunica. El sonido y los parámetros visibles provienen del archivo importado; no son una lectura completa de la pedalera.</p><div class="actions"><button id="sendPreset" class="secondary">Activar preset seleccionado</button><button id="sendScene" class="secondary">Activar escena seleccionada</button></div></section>
-      <section class="panel"><h2>CC personalizados</h2><p class="muted">Configura los mismos CC que tengas asignados en QuickTone. ON/OFF envía una orden; solo se muestra como recibido si llega respuesta MIDI.</p><div id="liveEffects"></div></section>
-      <details class="panel"><summary>Configurar canal y controles</summary><div class="two-col"><label>Canal MIDI<input id="channel" type="number" min="1" max="16" value="1"></label><label>CC de escena<input id="sceneCC" type="number" min="0" max="119" placeholder="Sin asignar"></label></div><p class="notice">Nuestra MG-30 emitió CC <strong>80 decimal</strong> (0x50), con valores 0/1/2 para S1/S2/S3. Confirma el mapeo de recepción de tu pedalera antes de habilitar el envío.</p><div id="mappingRows"></div><button id="saveMapping" class="primary">Guardar mapeo</button><p class="muted">Deja un CC vacío para desactivar ese control. Los cambios de mapeo borran los estados recibidos anteriores.</p></details>
-      <details class="panel"><summary>Monitor MIDI</summary><p class="muted">RX recibido · TX enviado. Las transferencias NUX esperan confirmación y relectura.</p><pre id="midiLog">Sin mensajes.</pre></details>
-    </section></dialog>
-  <dialog id="padConfig"><h2 id="padConfigTitle">Configurar pad</h2><label>Nombre<input id="padLabel" maxlength="32" autocomplete="off"></label><label>Acción<select id="padAction"><option value="toggle">Encender / apagar efecto</option><option value="on">Encender efecto</option><option value="off">Apagar efecto</option><option value="scene">Cambiar escena</option><option value="preset">Seleccionar preset</option><option value="none">Sin asignar</option></select></label><label id="padEffectField">Efecto<select id="padBlock"></select></label><label id="padSceneField">Escena<select id="padScene"><option value="0">S1</option><option value="1">S2</option><option value="2">S3</option></select></label><label id="padPresetField">Preset (01A-32D)<input id="padProgram" maxlength="3" placeholder="01A"></label><p class="muted">Guardar cambia solo este pad; no envía MIDI. Seleccionar un preset puede descartar ajustes temporales sin guardar.</p><div class="actions"><button id="padCancel" class="secondary">Cancelar</button><button id="padSave" class="primary">Guardar pad</button></div></dialog>
-  <dialog id="promptDialog"><form method="dialog"><h2 id="promptTitle"></h2><label id="promptLabel" for="promptInput"></label><input id="promptInput" maxlength="16" autocomplete="off"><div class="actions"><button value="cancel" class="secondary">Cancelar</button><button value="ok" class="primary">Guardar</button></div></form></dialog>
-  <dialog id="stageEditor"><div class="section-heading"><h2 id="stageEditorTitle">Ajustes en vivo</h2><button id="stageEditorClose" class="secondary">Cerrar</button></div><p id="stageEditorState" class="muted"></p><div id="stageModelControls"></div><div id="stageParameters" class="parameters"></div></dialog>
-  <dialog id="transferDialog"><h2>Revisar carga en NUX</h2><p id="transferSummary"></p><p class="notice">Esto reemplaza los ajustes guardados de los destinos. El respaldo previo queda en la app. Mantén USB conectado y esta app visible hasta terminar.</p><pre id="transferSlots"></pre><label class="inline"><input id="transferAssets" type="checkbox"> Los IR/NAM necesarios ya están instalados en los mismos destinos. Esta carga no los copia.</label><div class="actions"><button id="transferCancel" class="secondary">Cancelar</button><button id="transferConfirm" class="primary">Confirmar carga</button></div></dialog>
-  <input id="browserFile" type="file" accept=".mg30patch,.json" hidden>
-  <script type="module" src="app.mjs"></script>
-</body>
+<div class="settings-card"><div class="section-heading compact"><h3 data-i18n="Dispositivo">Dispositivo</h3><button class="text-button" data-i18n="Actualizar" id="refreshDevices">Actualizar</button></div><select aria-label="Dispositivo USB MIDI" data-i18n-aria-label="Dispositivo USB MIDI" id="devices"></select>
+<details class="settings-details"><summary data-i18n="Puertos">Puertos</summary><div class="two-col"><label><span data-i18n="Salida">Salida</span><select id="sendPort"></select></label><label><span data-i18n="Entrada">Entrada</span><select id="receivePort"></select></label></div></details>
+<div class="actions"><button class="primary" data-i18n="Conectar" id="connect">Conectar</button><button class="secondary" data-i18n="Desconectar" id="disconnect">Desconectar</button></div><p class="muted" data-i18n="Sin conexión" id="midiStatus" role="status">Sin conexión</p>
+</div>
+<div class="settings-card"><label class="setting-switch"><span data-i18n="Mapeo NUX predeterminado">Mapeo NUX predeterminado</span><input id="stageProfile" type="checkbox"/></label><p class="setting-hint" data-i18n="Activa si usas los CC de fábrica.">Activa si usas los CC de fábrica.</p></div>
+<button data-i18n="Conexión USB" hidden="" id="stageConnect">Conexión USB</button><button data-i18n="Conexión" hidden="" id="midiTab">Conexión</button>
+</section>
+</section>
+<section aria-labelledby="settingsMidiTab" data-settings-panel="midi" hidden="" id="settingsMidi" role="tabpanel">
+<div class="settings-card"><div class="two-col"><label><span data-i18n="Canal">Canal</span><input id="channel" max="16" min="1" type="number" value="1"/></label><label><span data-i18n="CC de escena">CC de escena</span><input id="sceneCC" max="119" min="0" placeholder="80" type="number"/></label></div><label class="setting-switch"><span data-i18n="Seguir selección del archivo">Seguir selección del archivo</span><input checked="" id="follow" type="checkbox"/></label><p class="setting-hint" data-i18n="Escenas: CC 80 · valores 0 / 1 / 2.">Escenas: CC 80 · valores 0 / 1 / 2.</p></div>
+<details class="settings-card"><summary data-i18n="CC personalizados">CC personalizados</summary><div id="mappingRows"></div><p class="setting-hint" data-i18n="Vacío = sin asignar.">Vacío = sin asignar.</p></details>
+<button class="primary settings-wide" data-i18n="Guardar mapeo" id="saveMapping">Guardar mapeo</button>
+<details class="settings-card"><summary data-i18n="Control del archivo">Control del archivo</summary><div class="live-display"><strong id="livePreset">—</strong><span data-i18n="Sin mensajes" id="liveScene">Sin mensajes</span></div><div class="actions"><button class="secondary" data-i18n="Activar preset" id="sendPreset">Activar preset</button><button class="secondary" data-i18n="Activar escena" id="sendScene">Activar escena</button></div><div id="liveEffects"></div></details>
+<details class="settings-card"><summary data-i18n="Monitor MIDI">Monitor MIDI</summary><pre data-i18n="Sin mensajes." id="midiLog">Sin mensajes.</pre></details>
+</section>
+<section aria-labelledby="settingsAboutTab" data-settings-panel="about" hidden="" id="settingsAbout" role="tabpanel">
+<div class="settings-card settings-about"><h3>MG30 Pocket <small>0.5.0</small></h3><p data-i18n="Gratis · offline · código abierto">Gratis · offline · código abierto</p><p class="setting-hint" data-i18n="Independiente. Sin afiliación con NUX.">Independiente. Sin afiliación con NUX.</p></div>
+<div class="settings-card"><span class="status-pill">Experimental</span><p class="setting-hint" data-i18n="Cambios temporales. Guardado pausado por compatibilidad.">Cambios temporales. Guardado pausado por compatibilidad.</p></div>
+<details class="settings-card"><summary data-i18n="Bancos y respaldos">Bancos y respaldos</summary><p class="setting-hint" data-i18n="Escritura deshabilitada. IR/NAM no se transfieren.">Escritura deshabilitada. IR/NAM no se transfieren.</p><div class="actions"><button data-i18n="Guardar en NUX" disabled="" id="stageSave">Guardar en NUX</button><button data-i18n="Cargar preset" disabled="" id="stageUploadOne">Cargar preset</button><button data-i18n="Cargar banco" disabled="" id="stageUploadAll">Cargar banco</button><button data-i18n="Respaldar todos" disabled="" id="stageBackup">Respaldar todos</button><button data-i18n="Abrir banco MIDI" disabled="" id="stageImportBank">Abrir banco MIDI</button><button class="secondary" data-i18n="Exportar respaldo" id="stageLastBackup">Exportar respaldo</button></div><p class="muted" id="stageTransfer" role="status"></p></details>
+</section>
+</dialog>
+<dialog id="padConfig"><h2 data-i18n="Configurar pad" id="padConfigTitle">Configurar pad</h2><label><span data-i18n="Nombre">Nombre</span><input autocomplete="off" id="padLabel" maxlength="32"/></label><label><span data-i18n="Acción">Acción</span><select id="padAction"><option data-i18n="Encender / apagar efecto" value="toggle">Encender / apagar efecto</option><option data-i18n="Encender efecto" value="on">Encender efecto</option><option data-i18n="Apagar efecto" value="off">Apagar efecto</option><option data-i18n="Cambiar escena" value="scene">Cambiar escena</option><option data-i18n="Seleccionar preset" value="preset">Seleccionar preset</option><option data-i18n="Sin asignar" value="none">Sin asignar</option></select></label><label id="padEffectField"><span data-i18n="Efecto">Efecto</span><select id="padBlock"></select></label><label id="padSceneField"><span data-i18n="Escena">Escena</span><select id="padScene"><option value="0">S1</option><option value="1">S2</option><option value="2">S3</option></select></label><label id="padPresetField">Preset (01A-32D)<input id="padProgram" maxlength="3" placeholder="01A"/></label><p class="muted" data-i18n="Guardar no envía MIDI. Cambiar preset puede descartar ajustes temporales.">Guardar no envía MIDI. Cambiar preset puede descartar ajustes temporales.</p><div class="actions"><button class="secondary" data-i18n="Cancelar" id="padCancel">Cancelar</button><button class="primary" data-i18n="Guardar pad" id="padSave">Guardar pad</button></div></dialog>
+<dialog id="promptDialog"><form method="dialog"><h2 id="promptTitle"></h2><label for="promptInput" id="promptLabel"></label><input autocomplete="off" id="promptInput" maxlength="16"/><div class="actions"><button class="secondary" data-i18n="Cancelar" value="cancel">Cancelar</button><button class="primary" data-i18n="Guardar" value="ok">Guardar</button></div></form></dialog>
+<dialog id="stageEditor"><div class="section-heading"><h2 data-i18n="Ajustes en vivo" id="stageEditorTitle">Ajustes en vivo</h2><button class="secondary" data-i18n="Cerrar" id="stageEditorClose">Cerrar</button></div><p class="muted" id="stageEditorState"></p><div id="stageModelControls"></div><div class="parameters" id="stageParameters"></div></dialog>
+<dialog id="transferDialog"><h2 data-i18n="Revisar carga en NUX">Revisar carga en NUX</h2><p id="transferSummary"></p><p class="notice" data-i18n="Esto reemplaza los ajustes guardados de los destinos. El respaldo previo queda en la app. Mantén USB conectado y esta app visible hasta terminar.">Esto reemplaza los ajustes guardados de los destinos. El respaldo previo queda en la app. Mantén USB conectado y esta app visible hasta terminar.</p><pre id="transferSlots"></pre><label class="inline"><input id="transferAssets" type="checkbox"/><span data-i18n="Los IR/NAM necesarios ya están instalados en los mismos destinos. Esta carga no los copia.">Los IR/NAM necesarios ya están instalados en los mismos destinos. Esta carga no los copia.</span></label><div class="actions"><button class="secondary" data-i18n="Cancelar" id="transferCancel">Cancelar</button><button class="primary" data-i18n="Confirmar carga" id="transferConfirm">Confirmar carga</button></div></dialog>
+<input accept=".mg30patch,.json" hidden="" id="browserFile" type="file"/>
+<script src="app.mjs" type="module"></script>
+<dialog id="aiDialog"><div class="section-heading"><div><span class="eyebrow">OPENAI</span><h2 data-i18n="Crea tu sonido">Crea tu sonido</h2></div><button class="secondary" data-i18n="Cerrar" id="aiClose">Cerrar</button></div><p class="muted" id="aiStatus" role="status"></p><label data-i18n="Describe tu preset" for="aiPrompt">Describe tu preset</label><textarea data-i18n-placeholder="AC30 worship: limpio, drive y solo. Corchea con puntillo." id="aiPrompt" maxlength="1200" placeholder="AC30 worship: limpio, drive y solo. Corchea con puntillo." rows="3"></textarea><div class="actions"><button class="primary" data-i18n="Generar" id="aiGenerate">Generar</button><button class="text-button" data-i18n="Clave API" id="aiSettings">Clave API</button></div><p class="setting-hint" data-i18n="Se envían tu texto y ajustes a OpenAI. IR y audio no se envían.">Se envían tu texto y ajustes a OpenAI. IR y audio no se envían.</p><div id="aiPreview"></div><div class="actions"><button class="primary" data-i18n="Usar preset" disabled="" id="aiApply">Usar preset</button><button class="secondary" data-i18n="Exportar" disabled="" id="aiExport">Exportar</button></div><p class="setting-hint" data-i18n="Subida NUX pausada por compatibilidad. Exporta para QuickTone.">Subida NUX pausada por compatibilidad. Exporta para QuickTone.</p></dialog></body>
 </html>

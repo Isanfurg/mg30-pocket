@@ -24,5 +24,5 @@ test('refuses corrupt or expanded drafts, duplicate slots and resource changes',
   assert.throws(() => fromBase64('A'.repeat(MAX_BYTES*2)));
   assert.throws(() => fromBase64('not@base64'));
   const duplicate=new Uint8Array(MAX_BYTES); for(let i=0;i<128;i++)duplicate.set(original,i*9902);
-  assert.throws(() => new PatchDocument(duplicate),/repetidos/);
+  assert.throws(() => new PatchDocument(duplicate),/duplicate/);
 });

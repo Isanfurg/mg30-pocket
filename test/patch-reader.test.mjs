@@ -26,7 +26,7 @@ test('read-only file viewer decodes all scenes without changing payload bytes', 
   assert.equal(preset.scenes.length, 3);
   assert.equal(preset.scenes[0].blocks.AMP.modelId, 9);
   assert.equal(preset.scenes[2].blocks.AMP.parameters.find(p => p.name === 'GAIN').value, 44);
-  assert.match(preset.scenes[0].blocks.DLY.subdivision, /puntillo/);
+  assert.match(preset.scenes[0].blocks.DLY.subdivision, /Dotted eighth/);
   assert.deepEqual(bytes, original);
 });
 test('reader honors typed-array offsets and full 128-record banks', () => {
@@ -38,17 +38,17 @@ test('reader honors typed-array offsets and full 128-record banks', () => {
   assert.equal(result.length, 128); assert.equal(result[127].slot, '32D');
 });
 test('incompatible layout is rejected instead of guessing values', () => {
-  assert.throws(() => readPatchFile(new Uint8Array(430)), /Formato no compatible/);
+  assert.throws(() => readPatchFile(new Uint8Array(430)), /Unsupported format/);
   const badHeader = fixture(); badHeader[0] = 255;
-  assert.throws(() => readPatchFile(badHeader), /Cabecera/);
+  assert.throws(() => readPatchFile(badHeader), /header/);
   const badChain = fixture(); badChain[4 + 94] = 11;
-  assert.throws(() => readPatchFile(badChain), /Cadena/);
+  assert.throws(() => readPatchFile(badChain), /chain/);
   const badName = fixture(); badName[4 + 106] = 200;
-  assert.throws(() => readPatchFile(badName), /Nombre/);
+  assert.throws(() => readPatchFile(badName), /name/);
 });
 test('unknown models and bypass are represented without inventing parameter names', () => {
   const data = fixture(); data[4 + 3] = 63 | 64;
   const block = readPatchFile(data)[0].scenes[0].blocks.AMP;
   assert.equal(block.enabled, false); assert.equal(block.modelId, 63);
-  assert.match(block.model, /sin mapear/); assert.equal(block.parameters[0].name, 'RAW 1');
+  assert.match(block.model, /unknown/); assert.equal(block.parameters[0].name, 'RAW 1');
 });

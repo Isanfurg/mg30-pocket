@@ -54,19 +54,19 @@ test('read, backup, arm, three ACKs, commit and exact readback complete one tran
   assert.deepEqual(completed,[24]);assert.equal(progress,1);assert.deepEqual(f.counts(),{writes:3,commits:1,reads:18,armed:false});
 });
 test('wrong ACK, incompatible response and timeout never report success',async()=>{
-  const f=fake({badAck:true}),p=await plan(f);await assert.rejects(f.link.upload(p,f.arm,f.disarm),/no respondió/);assert.equal(f.counts().commits,0);assert.equal(f.counts().armed,false);
-  await assert.rejects(fake({wrongLength:true}).link.refresh(),/incompatible/);
-  await assert.rejects(fake({drop:true}).link.refresh(),/no respondió/);
+  const f=fake({badAck:true}),p=await plan(f);await assert.rejects(f.link.upload(p,f.arm,f.disarm),/timed out/);assert.equal(f.counts().commits,0);assert.equal(f.counts().armed,false);
+  await assert.rejects(fake({wrongLength:true}).link.refresh(),/incompatible/i);
+  await assert.rejects(fake({drop:true}).link.refresh(),/timed out/);
 });
 test('readback mismatch fails and leaves backup intact; drift/stale connection never arms',async()=>{
   const f=fake({badReadback:true}),p=await plan(f),original=JSON.stringify(p.backup);
-  await assert.rejects(f.link.upload(p,f.arm,f.disarm),/no coincide/);assert.equal(JSON.stringify(p.backup),original);assert.equal(f.counts().armed,false);
+  await assert.rejects(f.link.upload(p,f.arm,f.disarm),/mismatch/);assert.equal(JSON.stringify(p.backup),original);assert.equal(f.counts().armed,false);
   const g=fake(),q=await plan(g);g.stored.get(24)[0][9]^=1;
-  await assert.rejects(g.link.upload(q,g.arm,g.disarm),/cambió/);assert.equal(g.counts().writes,0);
-  const h=fake(),r=await plan(h);h.link.disconnect();await assert.rejects(h.link.upload(r,h.arm,h.disarm),/conexión/);assert.equal(h.counts().writes,0);
+  await assert.rejects(g.link.upload(q,g.arm,g.disarm),/changed/);assert.equal(g.counts().writes,0);
+  const h=fake(),r=await plan(h);h.link.disconnect();await assert.rejects(h.link.upload(r,h.arm,h.disarm),/connection/);assert.equal(h.counts().writes,0);
 });
 test('backup failure and malformed banks cannot reach a write',async()=>{
   const f=fake(),p=await plan(f);await assert.rejects(f.link.upload(p,async()=>{throw new Error('disk full');},f.disarm),/disk full/);assert.equal(f.counts().writes,0);
-  assert.throws(()=>validateBank({...p.bank,records:[...p.bank.records,...p.bank.records]}),/duplicados/);
+  assert.throws(()=>validateBank({...p.bank,records:[...p.bank.records,...p.bank.records]}),/Duplicate/);
   assert.throws(()=>validateBank({...p.bank,assets:'embedded'}));
 });

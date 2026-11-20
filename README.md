@@ -1,90 +1,65 @@
 # MG30 Pocket
 
-<img src="docs/images/icon.svg" width="112" alt="Icono original: pedal dorado con onda de audio y cruz discreta">
+<img src="docs/images/icon-v2.png" width="112" alt="Gold guitar pick with waveform and subtle cross">
 
-### Diseño 0.4.1
+A free Android preset editor and MIDI controller for the NUX MG-30. Built for tablets, split-screen lyrics and live playing. Independent project, not affiliated with NUX.
 
-Azul noche, marfil y dorado suave; pedales y pads identificados por familia de efecto, estados con texto y luz, escenas grandes y controles táctiles. Una cruz pequeña en la marca y la firma «Para Su gloria · Salmo 150:6» acompañan la interfaz sin ocupar los controles. Todo funciona offline, sin fuentes ni imágenes remotas. Incluye icono Android y archivos PNG/SVG para la comunidad.
+[Download APK 0.5.0](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.5.0) | [Español](docs/README.es.md) | [MIT license](LICENSE)
 
-### Selector visual 0.4.2
+## Play and edit
 
-En **Editar**, toca un pedal, busca por nombre y elige una tarjeta ilustrada en **Elige tu sonido**. La selección se resalta; la tarjeta del modelo que está sonando indica **Actual en la escena**. Elegir o buscar no envía MIDI: pulsa **Usar este efecto** para aplicarlo. Conserva el bypass y modifica solo la escena actual; relee la NUX para confirmar el resultado y mostrar sus parámetros. No envía valores por defecto: revisa los controles y el nivel después del cambio. IR/NAM y modelos especiales quedan fuera de este selector.
+- **Edit:** read the current preset, switch scenes, toggle effects and adjust supported parameters. Illustrated model cards with search and confirmed readback.
+- **Pads:** eight configurable buttons. Tap to play; hold to edit without sending MIDI.
+- **Local files:** import/export QuickTone `.mg30patch` presets or full banks, copy scenes and recover drafts. Original IR/NAM payloads are preserved.
+- **Settings:** separate General, USB, MIDI and About sections. English by default; Spanish available in General. Switching language preserves edits, custom names and MIDI connections.
+- **Identity:** midnight blue, ivory and gold. A subtle Christian signature and a new pick icon. [Icon source prompt](docs/ICON-PROMPT.md).
 
-El editor de archivos usa las mismas tarjetas; allí tocar una tarjeta cambia el archivo local. Ilustraciones vectoriales originales, colores por modelo, número de perillas y detalles para tape echo y shimmer; no se descargan fotos ni logos de terceros.
+Local editing and MIDI work offline. No ads or analytics. Android 8+, current WebView, USB host/OTG and a data cable required for MIDI.
 
-Icono original incluido en Android y como [PNG](docs/images/icon.png) y [SVG para compartir](docs/images/icon.svg), bajo la licencia MIT del proyecto. Los cambios de modelo siguen siendo temporales: el guardado de bancos continúa pausado mientras se investiga el aviso de firmware. No se ha validado este selector con hardware físico.
+## Connect
 
-<img src="docs/images/drive-models.png" width="320" alt="Tarjetas ilustradas de overdrive con NUX simulada"> <img src="docs/images/model-selector.png" width="320" alt="Selector visual de delays con NUX simulada">
+1. Settings > USB: select the device and ports, then Connect.
+2. Enable Factory NUX mapping only if your CC assignments match the default NUX mapping.
+3. Tap Read NUX. Reread after changing controls on the pedalboard.
+4. Use Edit or Pads. Live edits are temporary.
 
-App Android gratuita y offline para controlar una NUX MG-30 desde una tablet, junto a tu app de letras. Proyecto independiente, sin afiliación con NUX.
+Settings > MIDI holds the channel, scene CC and optional custom assignments. Each settings section is separate; advanced controls are collapsed.
 
-[Descargar APK 0.4.2 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.2)
+## AI builder (optional)
 
-## Dos pestañas
+1. Import a working preset as your template. The app demo is for UI previews, not hardware use.
+2. Settings > General > OpenAI: paste your own [API key](https://platform.openai.com/api-keys) and save it.
+3. Open AI builder, describe the sound and Generate.
+4. Review all three scenes, then Use preset in the local editor or Export for QuickTone.
 
-**Editar:** lee el preset actual, sus tres escenas y efectos. Toca un pedal para abrir sus parámetros y ajustar el sonido temporalmente por MIDI, con relectura al soltar el slider. Los modelos desconocidos y controles especiales se conservan, sin inventar controles.
+Uses the OpenAI Responses API with GPT-4.1 mini and structured JSON output. API usage is billed to your OpenAI account, separately from ChatGPT. The Generate button starts a paid API request; connecting USB or editing never does.
 
-**Pads:** ocho botones grandes y configurables. Un toque ejecuta; mantener pulsado unos 650 ms abre la configuración **sin ejecutar la acción**. Desplazar la pantalla o cancelar el gesto tampoco envía MIDI.
+Your key is encrypted with Android Keystore (AES-GCM) in app-private preferences. It is never returned to JavaScript, added to drafts, included in exports or committed to this repository. Remove it in the same settings section. Requests go directly to `api.openai.com`, with redirects disabled and `store: false`. Only the prompt, preset settings and model catalog are sent; no IR/NAM payloads or audio are uploaded.
 
-Cada pad puede tener nombre propio y acción:
+The result is untrusted input: model IDs, parameter names, integer ranges, scene count and duplicates are checked before a new local preset is accepted. Chain order, controllers and IR/NAM data remain from the template. A stale proposal cannot overwrite later edits. Suggestions are starting points, not measured loudness calibration.
 
-- Encender/apagar, encender o apagar un efecto: Delay, Reverb, Overdrive, etc.
-- Seleccionar S1, S2 o S3.
-- Seleccionar un preset 01A–32D.
-- Quedar sin asignar.
+<img src="docs/images/settings.png" width="280" alt="English settings with separate sections"> <img src="docs/images/ai-builder.png" width="280" alt="AI review with simulated output; no paid request">
 
-Las asignaciones se guardan en la tablet y pueden configurarse sin pedalera. Guardar un pad no envía MIDI. Se muestra estado activo/inactivo solo cuando hay una lectura de la NUX. Mantener pulsado, botón derecho o Shift+F10 abre la configuración; Enter/Espacio sirven para tocar o mantener con teclado. Seleccionar un preset puede descartar ajustes temporales sin guardar.
+References: [Responses API quickstart](https://developers.openai.com/api/docs/quickstart), [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
 
-USB MIDI y archivos locales están en el botón **Ajustes**, sin ocupar otra pestaña. El editor de archivos mantiene importación/exportación `.mg30patch`, copia de escenas y borrador recuperable, conservando el recurso IR/NAM en el archivo.
+## Compatibility
 
-<img src="docs/images/pads.png" width="750" alt="Pads en Android con NUX simulada">
+**Direct NUX bank upload/save remains disabled.** A physical MG-30 reported a firmware compatibility warning during earlier PC testing. This release does not bypass that warning, update firmware or reset the device. Export generated presets for manual import through compatible QuickTone instead.
 
-## Estado de compatibilidad
+Read and temporary CC changes previously worked from a PC with firmware 6.0.5, but the reported warning remains unresolved. The APK still needs validation with a real tablet and pedalboard. IR/NAM assets are not transferred. Models with unknown or special controls remain protected.
 
-**El aviso de firmware de la NUX física sigue sin resolver.** No se cambió ni actualizó su firmware. En 0.3:
+## Development
 
-- La escritura guardada y carga de bancos están bloqueadas tanto en UI como en el bridge Android.
-- No se lanzan consultas propietarias automáticamente al conectar, volver de otra app o recibir cambios MIDI. Leer NUX y acciones live requieren una acción del usuario.
-- IR/NAM no se transfieren. No hay actualización de firmware, reset ni consola SysEx genérica.
-- Lectura y CC temporales funcionaron por USB desde PC en una MG-30 6.0.5: mezcla del delay, bypass conservando modelo y escena. El buffer se restauró exactamente. El usuario informó además de un aviso de compatibilidad durante esas pruebas; no se considera resuelta la integración por haber recibido datos.
-- Falta probar la APK con tablet/cable/NUX físicos e identificar el mensaje completo. Si aparece el aviso, detener las pruebas y conservar el texto/foto para diagnosticarlo.
-
-La UI y el protocolo se prueban en emulador con un peer simulado. Es una APK experimental para ensayo, no una garantía de funcionamiento en directo.
-
-## Conectar
-
-Android 8+, WebView actualizado, USB host/OTG, cable de datos y MG-30 encendida. No requiere internet, micrófono ni acceso global a los archivos.
-
-1. Abre Ajustes, selecciona dispositivo USB y puertos de envío/recepción.
-2. Pulsa Leer NUX manualmente para identificar y leer el estado.
-3. En Ajustes → Control y conexión, confirma el mapeo predeterminado solo si no reasignaste los CC en QuickTone. El canal y CC de escena son configurables.
-4. Usa Editar o Pads. Los ajustes del sonido son temporales; el guardado está pausado.
-
-Para letras, usa pantalla dividida desde las aplicaciones recientes de Android. El método depende de la tablet. La Activity es redimensionable y la UI se adapta; no solicita superposición sobre otras apps. Mantener pantalla encendida es opcional. Girar algunos knobs físicos no emite MIDI: pulsa Leer NUX para actualizar.
-
-## Compilar y probar
-
-JDK 17, SDK/Build Tools 36, Node.js 22+. Gradle 8.13 y AGP 8.13.1 fijados. Sin dependencias npm ni Android de runtime externas.
+Requirements: Java 17, Android SDK 36, build tools 36.0.0 and Node 22+.
 
 ```sh
 npm test
-./gradlew assembleDebug assembleDebugAndroidTest lintDebug --console plain
-# Windows: .\gradlew.bat ...
-```
-
-APK: `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions ejecuta pruebas, compilación y lint y adjunta una APK debug. La firma local se mantiene entre releases locales; otros builds pueden tener otra firma. Exporta tus archivos antes de desinstalar para cambiar de firma.
-
-```sh
-# Solo en instalación de QA: reemplaza borrador y mapeo con fixtures sintéticos.
+./gradlew assembleDebug assembleDebugAndroidTest lintDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell am instrument -w cl.isanfurg.mg30pocket.test/cl.isanfurg.mg30pocket.SmokeRunner
 ```
 
-Pruebas Node: formato y preservación de recursos, MIDI fragmentado, protocolo de transferencia retenido pero bloqueado en producción, gesto de tap/hold/cancel y validación de pads. El smoke Android verifica lectura/control con peer simulado, persistencia del pad, hold sin MIDI, tap exactamente una vez, scroll sin acción y bloqueo de escrituras. No abre USB físico.
+The Android smoke test uses a simulated MIDI/AI peer, makes no paid requests and opens no hardware ports. It checks drafts, language switching, separated settings, encrypted credential storage, model changes, pads, AI review/apply and narrow/wide layouts. The AI request has not been exercised against a paid account without a user key.
 
-Preview PC: `npm run preview`, http://127.0.0.1:8766 . El bridge USB MIDI solo está en la APK.
-
-## Créditos
-
-MIT. [Créditos y licencia del fixture](THIRD_PARTY_NOTICES.md) · [Detalles de protocolo y funciones pausadas](docs/PROTOCOL.md). Dibujos de equipo genéricos y originales; marcas/modelos pertenecen a sus dueños. No se incluyen bancos personales, IR, NAM ni audio privados.
+`npm run preview` opens the local web editor at `http://127.0.0.1:8766`; USB and secure key storage require the Android APK. No runtime third-party dependencies. Do not commit private presets, IR/NAM files or API keys. See [third-party notices](THIRD_PARTY_NOTICES.md).
