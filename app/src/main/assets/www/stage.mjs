@@ -1,5 +1,5 @@
 import catalog from './patch-catalog.mjs';
-import { NAMES, PROFILE, liveSwitch, liveParameter, validateBank, describeParts, decodeScene } from './nux.mjs';
+import { NAMES, PROFILE, liveSwitch, liveParameter, liveModels, liveModel, validateBank, describeParts, decodeScene } from './nux.mjs';
 import { cc, pc } from './midi.mjs';
 import { gearArt } from './gear-art.mjs';
 import { toBase64 } from './session.mjs';
@@ -16,7 +16,7 @@ export function createStage(ctx) {
   const enabled=()=>ctx.connection().send&&ctx.connection().receive&&profile()&&Boolean(snapshot())&&!api.busy;
   const text=message=>{$('stageStatus').textContent=message;};
   const progress=(done,total)=>{$('stageTransfer').textContent=`${done}/${total} presets · mantén USB conectado y la app visible`;};
-  function controls(){document.querySelectorAll('#stageView button,#stageEditor input,#stageEditorClose').forEach(b=>{b.disabled=api.busy;});for(const id of ['stageTab','padsTab','editorTab','midiTab','padsSync'])$(id).disabled=api.busy;for(const id of ['stageSave','stageUploadOne','stageUploadAll','stageBackup','stageImportBank'])$(id).disabled=true;}
+  function controls(){document.querySelectorAll('#stageView button,#stageEditor input,#stageEditor select,#stageEditor button').forEach(b=>{b.disabled=api.busy;});for(const id of ['stageTab','padsTab','editorTab','midiTab','padsSync'])$(id).disabled=api.busy;for(const id of ['stageSave','stageUploadOne','stageUploadAll','stageBackup','stageImportBank'])$(id).disabled=true;}
   async function run(work){if(api.busy){ctx.toast('Espera a que termine la operación.',true);return;}api.busy=true;controls();render();try{return await work();}catch(error){link.snapshot=null;if($('stageEditor').open)$('stageEditor').close();text(error.message);ctx.toast(error.message,true);}finally{api.busy=false;controls();render();}}
   function bind(id,work){$(id).addEventListener('click',()=>run(work));}
   async function refresh(){await parameterJobs;const value=await link.refresh();text(`NUX ${link.identity.firmware} · valores leídos por USB${dirtyLive?' · cambios en vivo sin guardar':''}`);render();return value;}
@@ -55,6 +55,28 @@ export function createStage(ctx) {
     $('stageEditorTitle').textContent=`${NAMES[selectedBlock]} · S${state.scene+1}`;
     $('stageEditorState').textContent='Los sliders cambian la NUX por MIDI y se releen al soltar. Los ajustes son temporales; el guardado sigue pausado por compatibilidad.';
     $('stageParameters').replaceChildren();
+    $('stageModelControls').replaceChildren();
+    const choices=liveModels(selectedBlock);
+    if(choices.length){
+      const label=make('label','Modelo de efecto / ampli'),select=make('select'),apply=make('button','Cambiar modelo');
+      select.id='stageModel';select.setAttribute('aria-label','Modelo de efecto / ampli');
+      for(const item of choices){const option=make('option',item.name.replace(/^\d+\.\s*/,''));option.value=item.id;select.append(option);}
+      if(!choices.some(m=>m.id===effect.modelId)){const option=make('option',effect.model);option.value=effect.modelId;option.disabled=true;select.prepend(option);}
+      select.value=effect.modelId;label.append(select);
+      apply.id='stageModelApply';apply.addEventListener('click',()=>{
+        const target=Number(select.value),block=selectedBlock,program=state.program,scene=state.scene;
+        if(target===effect.modelId)return;
+        run(async()=>{
+          clearTimeout(knobTimer);await parameterJobs;const now=snapshot();
+          if(!profile()||!now||now.program!==program||now.scene!==scene||now.preset.scenes[scene].blocks[block].modelId!==effect.modelId)throw new Error('La selección cambió. Lee de nuevo antes de cambiar modelo.');
+          await channel(liveModel(ctx.channel(),block,target,effect.enabled));dirtyLive=true;await refresh();
+          const actual=current().scenes[snapshot().scene].blocks[block];
+          if(snapshot().program!==program||snapshot().scene!==scene||actual.modelId!==target||actual.enabled!==effect.enabled)throw new Error('Modelo sin confirmar. Lee de nuevo la NUX.');
+          renderEditor();$('stageEditorState').textContent='Modelo confirmado por relectura. Revisa sus parámetros y nivel; cambio temporal sin guardar.';
+        });
+      });
+      $('stageModelControls').append(label,apply,make('p','Se cambia solo esta escena y se conserva encendido/apagado. No se envían valores por defecto: los parámetros se leen desde la NUX.','muted'));
+    }
     const model=catalog.models.find(m=>m.block===selectedBlock&&m.id===effect.modelId);
     if(!model||!['CMP','EFX','AMP','EQ','GATE','MOD','DLY','RVB'].includes(selectedBlock)){$('stageParameters').append(make('p','Controles especiales conservados: no se interpretan como parámetros numéricos.','muted'));return;}
     for(const p of model.parameters.filter(p=>p.editable&&p.min>=0&&p.max<=100)){

@@ -1,8 +1,18 @@
 # MG30 Pocket
 
+<img src="docs/images/icon.svg" width="112" alt="Icono original: pedal verde con onda de audio">
+
+### Novedades 0.4.0
+
+En **Editar**, toca un pedal, elige **Modelo de efecto / ampli** y pulsa **Cambiar modelo**. Permite cambiar overdrive, ampli, compresor, EQ, puerta, modulación, delay y reverb desde el catálogo de modelos normales. Conserva el bypass y modifica solo la escena actual; relee la NUX para confirmar el resultado y mostrar los parámetros del nuevo modelo. No envía parámetros por defecto: revisa los valores y el nivel después del cambio. IR/NAM y modelos especiales quedan fuera de este selector.
+
+Icono original incluido en Android y como [PNG](docs/images/icon.png) y [SVG para compartir](docs/images/icon.svg), bajo la licencia MIT del proyecto. Los cambios de modelo siguen siendo temporales: el guardado de bancos continúa pausado mientras se investiga el aviso de firmware. No se ha validado este selector con hardware físico.
+
+<img src="docs/images/model-selector.png" width="320" alt="Selector de modelo y controles en Android con NUX simulada">
+
 App Android gratuita y offline para controlar una NUX MG-30 desde una tablet, junto a tu app de letras. Proyecto independiente, sin afiliación con NUX.
 
-[Descargar APK 0.3.0 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.3.0)
+[Descargar APK 0.4.0 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.0)
 
 ## Dos pestañas
 

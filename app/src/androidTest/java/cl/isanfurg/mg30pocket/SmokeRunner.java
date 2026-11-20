@@ -98,6 +98,13 @@ public class SmokeRunner extends Instrumentation {
             evaluate(delay+".querySelector('.stage-open').click()");
             evaluate("(()=>{const r=document.querySelector('#stageParameters input');r.value=58;r.dispatchEvent(new Event('input'));r.dispatchEvent(new Event('change'));})()");
             until("document.getElementById('stageEditorState').textContent.startsWith('Ajuste confirmado')","true");
+            evaluate("document.getElementById('stageModel').value='1';document.getElementById('stageModelApply').click()");
+            until("document.getElementById('stageEditorState').textContent.startsWith('Modelo confirmado') && !document.getElementById('stageSync').disabled","true");
+            check("document.getElementById('stageModel').value==='1'","true");
+            check(delay+".querySelector('.stage-toggle').textContent==='Encender'","true");
+            screenshot("qa-model-selector.png");
+            evaluate("document.getElementById('stageModel').value='2';document.getElementById('stageModelApply').click()");
+            until("document.getElementById('stageEditorState').textContent.startsWith('Modelo confirmado') && !document.getElementById('stageSync').disabled","true");
             evaluate("document.getElementById('stageEditorClose').click()");
             check("document.getElementById('stageSave').disabled","true");
             evaluate("document.getElementById('padsTab').click()");
@@ -121,6 +128,10 @@ public class SmokeRunner extends Instrumentation {
             runOnMainSync(()->activity.setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));Thread.sleep(1000);
             check("document.documentElement.scrollWidth<=window.innerWidth","true");
             screenshot("qa-pads-tablet.png");
+            Bitmap icon=Bitmap.createBitmap(1080,1080,Bitmap.Config.ARGB_8888);
+            android.graphics.drawable.Drawable art=getTargetContext().getDrawable(cl.isanfurg.mg30pocket.R.drawable.ic_launcher);
+            art.setBounds(0,0,1080,1080);art.draw(new android.graphics.Canvas(icon));
+            try(FileOutputStream output=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),"icon.png"))){icon.compress(Bitmap.CompressFormat.PNG,100,output);}finally{icon.recycle();}
             runOnMainSync(()->{android.view.ViewGroup.LayoutParams layout=web.getLayoutParams();layout.width=(int)(360*getTargetContext().getResources().getDisplayMetrics().density);web.setLayoutParams(layout);});Thread.sleep(500);
             check("document.documentElement.scrollWidth<=window.innerWidth","true");
             check("document.querySelector('#padGrid button').getBoundingClientRect().height>=100","true");

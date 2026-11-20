@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {NuxLink,decodeScene,encodeScene,describeParts,validateBank,liveSwitch,liveParameter} from '../app/src/main/assets/www/nux.mjs';
+import {NuxLink,decodeScene,encodeScene,describeParts,validateBank,liveSwitch,liveParameter,liveModels,liveModel} from '../app/src/main/assets/www/nux.mjs';
 import {MidiStream} from '../app/src/main/assets/www/midi.mjs';
 const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/preset_07A.json',import.meta.url))).part0;
+test('live model selection validates catalog and preserves bypass',()=>{
+  assert.ok(liveModels('EFX').some(m=>m.id===5));
+  assert.deepEqual(liveModel(1,'EFX',5,false),[176,2,69]);
+  assert.deepEqual(liveModel(1,'RVB',2,true),[176,8,2]);
+  for(const block of ['IR','WAH','SR','VOL','unknown'])assert.deepEqual(liveModels(block),[]);
+  assert.throws(()=>liveModel(1,'AMP',63,true));
+  assert.throws(()=>liveModel(1,'EFX',1.5,true));
+});
 function parts(program=24){return [0,1,2].map(part=>{const body=fixture.slice();body[5]=program;body[6]=part;return body;});}
 test('independent captured fixture decodes to native file layout; 8-bit flags and every padding bit survive',()=>{
   const scene=decodeScene(fixture);assert.equal(scene.length,142);

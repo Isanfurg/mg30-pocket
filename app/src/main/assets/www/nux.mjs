@@ -1,5 +1,6 @@
 import { readPatchFile } from './patch-reader.mjs';
 import { cc } from './midi.mjs';
+import catalog from './patch-catalog.mjs';
 
 // Protocol facts documented for 5.0.2; 6.x requires the same 220-byte layout.
 // https://github.com/voronkovd/nux-mg30-mcp/blob/main/docs/PROTOCOL.md
@@ -42,6 +43,14 @@ export function validateBank(bank) {
 export function liveSwitch(channel, block, model, enabled) {
   if(!PROFILE[block] || !Number.isInteger(model) || model<1 || model>63 || typeof enabled!=='boolean') throw new Error('Modelo o bloque sin control MIDI validado.');
   return cc(channel,PROFILE[block][0],model|(enabled?0:64));
+}
+export function liveModels(block) {
+  return ['CMP','EFX','AMP','EQ','GATE','MOD','DLY','RVB'].includes(block)
+    ? catalog.models.filter(m=>m.block===block&&!m.special&&m.id>=1&&m.id<=63).sort((a,b)=>a.id-b.id) : [];
+}
+export function liveModel(channel, block, model, enabled) {
+  if(!liveModels(block).some(m=>m.id===model))throw new Error('Modelo especial o desconocido: conserva su archivo base.');
+  return liveSwitch(channel,block,model,enabled);
 }
 export function liveParameter(channel, block, parameter, value) {
   const capacity={CMP:4,EFX:6,AMP:8,EQ:12,GATE:4,MOD:6,DLY:8,RVB:4};
