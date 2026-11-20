@@ -128,6 +128,12 @@ public class SmokeRunner extends Instrumentation {
             runOnMainSync(()->activity.setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));Thread.sleep(1000);
             check("document.documentElement.scrollWidth<=window.innerWidth","true");
             screenshot("qa-pads-tablet.png");
+            evaluate("document.getElementById('stageTab').click()");
+            until("!document.getElementById('stageView').hidden","true");Thread.sleep(350);
+            check("document.documentElement.scrollWidth<=window.innerWidth","true");
+            screenshot("qa-stage-tablet.png");
+            evaluate("document.getElementById('padsTab').click()");
+            Thread.sleep(350);
             Bitmap icon=Bitmap.createBitmap(1080,1080,Bitmap.Config.ARGB_8888);
             android.graphics.drawable.Drawable art=getTargetContext().getDrawable(cl.isanfurg.mg30pocket.R.drawable.ic_launcher);
             art.setBounds(0,0,1080,1080);art.draw(new android.graphics.Canvas(icon));

@@ -30,6 +30,7 @@ export function createPads(ctx){
     $('padGrid').replaceChildren(...config.map((pad,index)=>{
       let active=null;if(state){if(pad.action==='scene')active=state.scene===pad.scene;else if(pad.action==='preset')active=state.program===pad.program;else if(['toggle','on','off'].includes(pad.action))active=state.preset.scenes[state.scene].blocks[pad.block]?.enabled??null;}
       const button=make('button',undefined,`performance-pad${active===true?' active':''}`);button.dataset.pad=index;
+      button.dataset.kind=pad.block||pad.action;button.dataset.type=pad.action==='scene'?'ESCENA':pad.action==='preset'?'PRESET':pad.action==='none'?'LIBRE':'EFECTO';
       if(active!==null)button.setAttribute('aria-pressed',String(active));button.setAttribute('aria-description','Toca para ejecutar. Mantén pulsado para configurar. Con teclado: Shift F10.');
       button.append(make('span',String(index+1).padStart(2,'0'),'pad-number'),make('strong',pad.label),make('small',detail(pad)),make('span',active===null?'Sin estado leído':active?'Activo · estado leído':'Inactivo · estado leído','pad-state'));
       const execute=()=>{if(pad.action==='none'){ctx.toast('Mantén pulsado para asignar una acción.');return;}ctx.stage.executePad(pad);};

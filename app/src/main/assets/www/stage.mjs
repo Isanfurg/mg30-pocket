@@ -45,7 +45,7 @@ export function createStage(ctx) {
         const desired=!effect.enabled;await channel(liveSwitch(ctx.channel(),key,effect.modelId,desired));dirtyLive=true;await refresh();
         const read=current().scenes[snapshot().scene].blocks[key];if(read.enabled!==desired||read.modelId!==effect.modelId)throw new Error('El cambio no coincide al leer. Revisa el mapeo MIDI.');
       });});
-      card.append(open,toggle);$('stagePedals').append(card);
+      card.dataset.kind=key;card.append(open,toggle);$('stagePedals').append(card);
     }
   }
   function openEditor(key){selectedBlock=key;renderEditor();$('stageEditor').showModal();}

@@ -1,6 +1,10 @@
 # MG30 Pocket
 
-<img src="docs/images/icon.svg" width="112" alt="Icono original: pedal verde con onda de audio">
+<img src="docs/images/icon.svg" width="112" alt="Icono original: pedal dorado con onda de audio y cruz discreta">
+
+### Diseño 0.4.1
+
+Azul noche, marfil y dorado suave; pedales y pads identificados por familia de efecto, estados con texto y luz, escenas grandes y controles táctiles. Una cruz pequeña en la marca y la firma «Para Su gloria · Salmo 150:6» acompañan la interfaz sin ocupar los controles. Todo funciona offline, sin fuentes ni imágenes remotas. Incluye icono Android y archivos PNG/SVG para la comunidad.
 
 ### Novedades 0.4.0
 
@@ -12,7 +16,7 @@ Icono original incluido en Android y como [PNG](docs/images/icon.png) y [SVG par
 
 App Android gratuita y offline para controlar una NUX MG-30 desde una tablet, junto a tu app de letras. Proyecto independiente, sin afiliación con NUX.
 
-[Descargar APK 0.4.0 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.0)
+[Descargar APK 0.4.1 de prueba](https://github.com/Isanfurg/mg30-pocket/releases/tag/v0.4.1)
 
 ## Dos pestañas
 

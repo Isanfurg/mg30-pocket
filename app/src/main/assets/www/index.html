@@ -2,20 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0d171e">
+  <meta name="theme-color" content="#101521">
   <title>MG30 Pocket</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top"><div class="brand"><span class="brand-icon">M</span><div><strong>MG30 <span>Pocket</span></strong><small>Tu pedalboard, en el bolsillo.</small></div></div><div class="header-actions"><span id="connectionBadge" class="badge">SIN CONEXIÓN</span><button id="settingsOpen" class="icon-button" aria-label="Ajustes">&#9881;</button></div></header>
+  <header class="top"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 5v22M9 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M5 23l4-4 4 4M19 23l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".45"/></svg></span><div><strong>MG30 <span>Pocket</span></strong><small>Hecho para servir. Listo para tocar.</small></div></div><div class="header-actions"><span id="connectionBadge" class="badge">SIN CONEXIÓN</span><button id="settingsOpen" class="icon-button" aria-label="Ajustes">&#9881;</button></div></header>
   <main>
     <section id="padsView" hidden>
-      <div class="section-heading"><div><span class="eyebrow">TOCAR &middot; MANTENER PARA CONFIGURAR</span><h1 class="stage-title">Pads</h1></div><button id="padsSync" class="secondary">Leer NUX</button></div>
+      <div class="section-heading"><div><span class="eyebrow">TU SONIDO, AL SERVICIO</span><h1 class="stage-title">Pads en vivo</h1></div><button id="padsSync" class="secondary">Leer NUX</button></div>
       <p id="padsPreset" class="muted"></p>
       <div id="padGrid" class="performance-grid"></div>
       <p class="muted">Un toque ejecuta. Mantener pulsado configura sin ejecutar. Con teclado: Shift + F10.</p>
     </section>
     <section id="stageView" hidden>
-      <div class="section-heading"><div><span class="eyebrow">TABLET · EN DIRECTO</span><h1 class="stage-title">Editar preset actual</h1></div><button id="stageSync" class="primary">Leer NUX</button></div>
+      <div class="section-heading"><div><span class="eyebrow">ENCUENTRA TU VOZ</span><h1 class="stage-title">Tu pedalboard</h1></div><button id="stageSync" class="primary">Leer NUX</button></div>
       <p id="stageStatus" class="muted" role="status">Conecta USB MIDI y pulsa Leer NUX. Puedes usar pantalla dividida con tu app de letras.</p>
       <div class="stage-top"><strong id="stagePreset">Sin preset leído</strong><label class="inline"><input id="stageAwake" type="checkbox"> Mantener pantalla encendida</label></div>
       <div id="stageScenes" class="stage-scenes" role="group" aria-label="Cambiar escena en la NUX"></div>
@@ -41,6 +41,7 @@
       </div>
     </section>
 
+    <footer class="signature"><span aria-hidden="true">✝</span> Para Su gloria <span class="signature-ref">SALMO 150:6</span></footer>
   </main>
   <nav class="bottom" aria-label="Pantallas"><button id="stageTab" class="active">&#9638; <span>Editar</span></button><button id="padsTab">&#9673; <span>Pads</span></button></nav>
   <div id="toast" role="status" aria-live="polite" hidden></div>
